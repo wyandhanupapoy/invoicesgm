@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Sistem Penjualan dan Pembelian" />
-    <meta name="author" content="Sistem Akuntansi v4.6 - Final (Fixed)" />
-    <title>Sistem Akuntansi v4.6 (Final)</title>
+    <meta name="author" content="Sistem Akuntansi v4.7 - Refined" />
+    <title>Sistem Akuntansi v4.7 (Refined)</title>
     <style>
       :root {
         --primary: #003087;
@@ -303,6 +303,15 @@
         border-color: #f5c6cb;
         color: #721c24;
       }
+      .notification button {
+          float: right;
+          background: none;
+          border: none;
+          font-size: 1.2rem;
+          cursor: pointer;
+          line-height: 1;
+          color: inherit;
+      }
       .filterable-dropdown {
         position: relative;
       }
@@ -324,7 +333,7 @@
         padding: 10px;
         cursor: pointer;
       }
-      .dropdown-option:hover {
+      .dropdown-option:hover, .dropdown-option.focused {
         background-color: #f0f0f0;
       }
       .dropdown-option small {
@@ -401,6 +410,41 @@
       #print-area {
         display: none;
       }
+      #print-preview-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.6);
+          z-index: 3000;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow-y: auto;
+          padding: 20px;
+      }
+      #print-preview-modal .modal-content {
+          background: white;
+          padding: 25px;
+          border-radius: 8px;
+          max-width: 840px; /* A4 width-ish */
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+      }
+      #print-preview-modal .modal-body {
+          border: 1px solid #ccc;
+          padding: 10px;
+          margin-bottom: 20px;
+      }
+       #print-preview-modal .modal-actions {
+          text-align: right;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+      }
+
       @media print {
         * {
           margin: 0;
@@ -691,6 +735,7 @@
             />
           </div>
         </div>
+         <div id="trash-section"></div>
       </div>
     </div>
 
@@ -751,9 +796,9 @@
        */
       class SistemAkuntansi {
         constructor() {
-          this.STORAGE_KEY = "sistemAkuntansiData_v4.6";
-          this.DRAFT_KEY = "sistemAkuntansiDraft_v4.6";
-          this.TRASH_KEY = "sistemAkuntansiTrash_v4.6";
+          this.STORAGE_KEY = "sistemAkuntansiData_v4.7";
+          this.DRAFT_KEY = "sistemAkuntansiDraft_v4.7";
+          this.TRASH_KEY = "sistemAkuntansiTrash_v4.7";
 
           this.data = null;
           this.trash = [];
@@ -768,10 +813,12 @@
           this.itemIndex = new Map();
           this.isLoading = false;
           this.eventControllers = new Map();
+          this.notificationTimeout = null;
         }
 
         async init() {
           try {
+            this.cleanup(); // Ensure cleanup is called at the start
             console.log("Starting init...");
             this.showLoading(true);
             await this.loadData();
@@ -829,13 +876,13 @@
 
           const pengaturanContainer = document.getElementById("pengaturan");
           if (pengaturanContainer) {
-             // FIXED: Ensure trash section doesn't duplicate
             let trashSection = document.getElementById("trash-section");
-            if (!trashSection) {
-                trashSection = document.createElement("div");
-                trashSection.id = "trash-section";
-                pengaturanContainer.appendChild(trashSection);
+            if (trashSection) {
+                 trashSection.remove();
             }
+            trashSection = document.createElement("div");
+            trashSection.id = "trash-section";
+            pengaturanContainer.appendChild(trashSection);
             trashSection.innerHTML = this.generateTrashHTML();
             this.renderTrashTable();
           }
@@ -903,11 +950,11 @@
                 ${
                   type === "sale"
                     ? `
-                    <div class="form-group">
-                        <label for="ref-${type}">Ref</label>
-                        <input type="text" id="ref-${type}">
-                    </div>
-                `
+                <div class="form-group">
+                    <label for="ref-${type}">Ref</label>
+                    <input type="text" id="ref-${type}">
+                </div>
+              `
                     : ""
                 }
                 <div class="form-group">
@@ -918,7 +965,7 @@
                         <option value="Kredit">Kredit</option>
                     </select>
                 </div>
-          `;
+        `;
           }
 
           const itemFields = `
@@ -949,7 +996,7 @@
                             <label for="itemPrice-${type}">Harga Satuan (Rp)</label>
                             <input type="text" id="itemPrice-${type}" class="rupiah-input" required>
                         </div>
-                    `
+                      `
                         : ""
                     }
                     <div class="form-group" style="align-self: flex-end;">
@@ -961,45 +1008,45 @@
 
           const tableHeaders = isTransaction
             ? `
-                <th>No</th>
-                <th>Kode</th>
-                <th>Nama Barang</th>
-                <th class="text-right">Jumlah</th>
-                <th>Satuan</th>
-                <th class="text-right">Harga Satuan</th>
-                <th class="text-right">Total</th>
-                <th class="action-cell">Aksi</th>
+            <th>No</th>
+            <th>Kode</th>
+            <th>Nama Barang</th>
+            <th class="text-right">Jumlah</th>
+            <th>Satuan</th>
+            <th class="text-right">Harga Satuan</th>
+            <th class="text-right">Total</th>
+            <th class="action-cell">Aksi</th>
             `
             : `
-                <th>No</th>
-                <th>Kode</th>
-                <th>Nama Barang</th>
-                <th class="text-right">Jumlah</th>
-                <th>Satuan</th>
-                <th class="action-cell">Aksi</th>
+            <th>No</th>
+            <th>Kode</th>
+            <th>Nama Barang</th>
+            <th class="text-right">Jumlah</th>
+            <th>Satuan</th>
+            <th class="action-cell">Aksi</th>
             `;
 
           const summarySection = isTransaction
             ? `
-                <div class="summary-section">
-                    <div class="summary-grid">
-                        <label>Subtotal:</label>
-                        <div class="total-amount-display" id="subtotal-${type}">Rp 0</div>
-                        <label for="discount-${type}">Diskon (Rp):</label>
-                        <input type="text" id="discount-${type}" class="rupiah-input" value="0">
-                        <label for="shippingCost-${type}">Ongkos Kirim (Rp):</label>
-                        <input type="text" id="shippingCost-${type}" class="rupiah-input" value="0">
-                        <label>PPN 11%:</label>
-                        <div class="form-group" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="includePpn-${type}" style="width: auto;">
-                            <label for="includePpn-${type}" style="margin-bottom: 0;">Sertakan PPN</label>
-                        </div>
-                        <div></div>
-                        <div class="total-amount-display" id="ppn-${type}">Rp 0</div>
-                        <label>Grand Total:</label>
-                        <div class="total-amount-display" id="grandTotal-${type}">Rp 0</div>
+            <div class="summary-section">
+                <div class="summary-grid">
+                    <label>Subtotal:</label>
+                    <div class="total-amount-display" id="subtotal-${type}">Rp 0</div>
+                    <label for="discount-${type}">Diskon (Rp):</label>
+                    <input type="text" id="discount-${type}" class="rupiah-input" value="0">
+                    <label for="shippingCost-${type}">Ongkos Kirim (Rp):</label>
+                    <input type="text" id="shippingCost-${type}" class="rupiah-input" value="0">
+                    <label>PPN 11%:</label>
+                    <div class="form-group" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="includePpn-${type}" style="width: auto;">
+                        <label for="includePpn-${type}" style="margin-bottom: 0;">Sertakan PPN</label>
                     </div>
+                    <div></div>
+                    <div class="total-amount-display" id="ppn-${type}">Rp 0</div>
+                    <label>Grand Total:</label>
+                    <div class="total-amount-display" id="grandTotal-${type}">Rp 0</div>
                 </div>
+            </div>
             `
             : "";
 
@@ -1028,51 +1075,107 @@
                     </div>
                 </form>
             </div>
-          `;
+            `;
         }
 
         bindGlobalEvents() {
-            this.cleanup(); // Ensure all listeners are cleared before re-binding
-            const globalController = new AbortController();
-            this.eventControllers.set("global", globalController);
-            const { signal } = globalController;
+          this.cleanup(); // Ensure all listeners are cleared before re-binding
+          const globalController = new AbortController();
+          this.eventControllers.set("global", globalController);
+          const { signal } = globalController;
 
-            document.addEventListener("click", (e) => {
-                if (!e.target.closest(".filterable-dropdown")) {
-                    this.closeAllDropdowns();
-                }
-            }, { signal });
+          document.addEventListener(
+            "click",
+            (e) => {
+              if (!e.target.closest(".filterable-dropdown")) {
+                this.closeAllDropdowns();
+              }
+            },
+            { signal }
+          );
 
-            document.getElementById("saveConfigBtn")?.addEventListener("click", () => this.saveConfig(), { signal });
-            document.getElementById("saveMasterItemsBtn")?.addEventListener("click", () => this.saveMasterItemsFromTextarea(), { signal });
-            document.getElementById("clearMasterItemsBtn")?.addEventListener("click", () => this.clearMasterItems(), { signal });
-            document.getElementById("backupDataBtn")?.addEventListener("click", () => this.backupData(), { signal });
-            document.getElementById("restoreDataBtn")?.addEventListener("click", () => document.getElementById("restoreFileInput")?.click(), { signal });
-            document.getElementById("restoreFileInput")?.addEventListener("change", (e) => this.restoreData(e), { signal });
-            document.getElementById("exportCsvBtn")?.addEventListener("click", () => this.exportMasterItemsToCsv(), { signal });
-            document.getElementById("importCsvBtn")?.addEventListener("click", () => document.getElementById("csvFileInput")?.click(), { signal });
-            document.getElementById("csvFileInput")?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), { signal });
+          document
+            .getElementById("saveConfigBtn")
+            ?.addEventListener("click", () => this.saveConfig(), { signal });
+          document
+            .getElementById("saveMasterItemsBtn")
+            ?.addEventListener(
+              "click",
+              () => this.saveMasterItemsFromTextarea(),
+              { signal }
+            );
+          document
+            .getElementById("clearMasterItemsBtn")
+            ?.addEventListener("click", () => this.clearMasterItems(), {
+              signal,
+            });
+          document
+            .getElementById("backupDataBtn")
+            ?.addEventListener("click", () => this.backupData(), { signal });
+          document
+            .getElementById("restoreDataBtn")
+            ?.addEventListener(
+              "click",
+              () => document.getElementById("restoreFileInput")?.click(),
+              { signal }
+            );
+          document
+            .getElementById("restoreFileInput")
+            ?.addEventListener("change", (e) => this.restoreData(e), {
+              signal,
+            });
+          document
+            .getElementById("exportCsvBtn")
+            ?.addEventListener("click", () => this.exportMasterItemsToCsv(), {
+              signal,
+            });
+          document
+            .getElementById("importCsvBtn")
+            ?.addEventListener(
+              "click",
+              () => document.getElementById("csvFileInput")?.click(),
+              { signal }
+            );
+          document
+            .getElementById("csvFileInput")
+            ?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), {
+              signal,
+            });
 
-            document.getElementById("add-master-item-form-element")?.addEventListener("submit", (e) => {
+          document
+            .getElementById("add-master-item-form-element")
+            ?.addEventListener(
+              "submit",
+              (e) => {
                 e.preventDefault();
                 this.addNewMasterItem();
-            }, { signal });
+              },
+              { signal }
+            );
 
-            const dashboardFilters = document.getElementById("dashboard-filters");
-            if (dashboardFilters) {
-                dashboardFilters.addEventListener("input", Utils.debounce(() => this.renderDashboard(), 300), { signal });
+          const dashboardFilters = document.getElementById("dashboard-filters");
+          if (dashboardFilters) {
+            dashboardFilters.addEventListener(
+              "input",
+              Utils.debounce(() => this.renderDashboard(), 300),
+              { signal }
+            );
+          }
+
+          ["sale", "purchase", "delivery"].forEach((type) => {
+            this.bindFormEvents(type);
+            const historyFilters = document.getElementById(
+              `history-filters-${type}`
+            );
+            if (historyFilters) {
+                const formController = new AbortController();
+                this.eventControllers.set(`history-filter-${type}`, formController);
+                historyFilters.addEventListener("input", Utils.debounce(() => {
+                    const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
+                    this.renderHistoryTable(dataKey, `${type}-history-table`);
+                }, 300), { signal: formController.signal });
             }
-            
-            ["sale", "purchase", "delivery"].forEach((type) => {
-                this.bindFormEvents(type);
-                const historyFilters = document.getElementById(`history-filters-${type}`);
-                if (historyFilters) {
-                    historyFilters.addEventListener("input", Utils.debounce(() => {
-                        const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
-                        this.renderHistoryTable(dataKey, `${type}-history-table`);
-                    }, 300), { signal: this.eventControllers.get(`form-${type}`).signal });
-                }
-            });
+          });
         }
 
         bindFormEvents(type) {
@@ -1112,6 +1215,33 @@
 
             itemSelector?.addEventListener("input", Utils.debounce(() => this.filterDropdown(type), 300), { signal });
             itemSelector?.addEventListener("focus", () => this.filterDropdown(type, true), { signal });
+
+            // Keyboard navigation for item dropdown
+            itemSelector?.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    const options = dropdownOptions.querySelectorAll(".dropdown-option");
+                    if (!options.length) return;
+                    const current = dropdownOptions.querySelector(".dropdown-option.focused");
+                    let index = current ? Array.from(options).indexOf(current) : -1;
+                    if (e.key === "ArrowDown") {
+                        index = (index + 1) % options.length;
+                    } else if (e.key === "ArrowUp") {
+                        index = (index - 1 + options.length) % options.length;
+                    }
+                    options.forEach(o => o.classList.remove("focused"));
+                    if (index >= 0) {
+                        options[index].classList.add("focused");
+                        options[index].scrollIntoView({ block: "nearest" });
+                    }
+                } else if (e.key === "Enter" && dropdownOptions.style.display === "block") {
+                    e.preventDefault();
+                    const focused = dropdownOptions.querySelector(".dropdown-option.focused");
+                    if (focused && focused.dataset.code) {
+                        this.selectItemFromDropdown(focused.dataset.code, type);
+                    }
+                }
+            }, { signal });
 
             dropdownOptions?.addEventListener("click", (e) => {
                 const option = e.target.closest(".dropdown-option");
@@ -1186,11 +1316,11 @@
             const price =
                 type !== "delivery"
                     ? parseInt(
-                          form
-                              .querySelector(`#itemPrice-${type}`)
-                              .value.replace(/[^0-9]/g, ""),
-                          10
-                      ) || 0
+                        form
+                            .querySelector(`#itemPrice-${type}`)
+                            .value.replace(/[^0-9]/g, ""),
+                        10
+                    ) || 0
                     : 0;
             const unit = form.querySelector(`#itemUnit-${type}`).value;
 
@@ -1282,9 +1412,9 @@
                     }
 
                     // Load party names into Sets
-                    this.partyNames.customer = new Set(this.data.partyNames.customer);
-                    this.partyNames.pemasok = new Set(this.data.partyNames.pemasok);
-                    this.partyNames.recipient = new Set(this.data.partyNames.recipient);
+                    this.partyNames.customer = new Set(this.data.partyNames.customer || []);
+                    this.partyNames.pemasok = new Set(this.data.partyNames.pemasok || []);
+                    this.partyNames.recipient = new Set(this.data.partyNames.recipient || []);
 
                     // Load and clean trash
                     const trashData = localStorage.getItem(this.TRASH_KEY);
@@ -1313,52 +1443,60 @@
             this.itemIndex.clear();
             if (!this.data || !Array.isArray(this.data.masterItems)) return;
             this.data.masterItems.forEach(item => {
-                if(item.code) this.itemIndex.set(item.code.toUpperCase(), item);
-                if(item.name) this.itemIndex.set(item.name.toUpperCase(), item);
+                if (item.code) this.itemIndex.set(item.code.toUpperCase(), item);
+                // Only add name index if it doesn't conflict with a code index
+                if (item.name && !this.itemIndex.has(item.name.toUpperCase())) {
+                    this.itemIndex.set(item.name.toUpperCase(), item);
+                }
             });
         }
 
         async deleteTransaction(dataKey, id) {
-          if (confirm(`Apakah Anda yakin ingin menghapus transaksi ID: ${id}? Transaksi akan dipindahkan ke Trash.`)) {
-            try {
-              this.showLoading(true);
-              const index = this.data[dataKey].findIndex(item => item.id === id);
-              if (index > -1) {
-                const [transaction] = this.data[dataKey].splice(index, 1);
-                this.trash.unshift({ ...transaction, dataKey, deletedAt: new Date().toISOString() });
-                localStorage.setItem(this.TRASH_KEY, JSON.stringify(this.trash));
-                this.saveData();
-                await this.updateAllUI();
-                this.showNotification(`Transaksi ${id} telah dipindahkan ke Trash.`);
-              }
-            } catch (error) {
-              Utils.logError("Transaction delete failed", error);
-              this.showNotification("Gagal menghapus transaksi", false);
-            } finally {
-              this.showLoading(false);
+            if (confirm(`Apakah Anda yakin ingin menghapus transaksi ID: ${id}? Transaksi akan dipindahkan ke Trash.`)) {
+                try {
+                    this.showLoading(true);
+                    const index = this.data[dataKey].findIndex(item => item.id === id);
+                    if (index > -1) {
+                        const [transaction] = this.data[dataKey].splice(index, 1);
+                        // Add metadata for restoration
+                        const trashedItem = { ...transaction, dataKey, deletedAt: new Date().toISOString() };
+                        this.trash.unshift(trashedItem);
+                        
+                        localStorage.setItem(this.TRASH_KEY, JSON.stringify(this.trash));
+                        this.saveData();
+                        await this.updateAllUI();
+                        
+                        // Show notification with Undo option
+                        this.showNotification(`Transaksi ${id} dipindahkan ke Trash. <button class="btn btn-sm btn-warning" onclick="app.restoreTransaction('${dataKey}', '${trashedItem.id}', true)">Undo</button>`);
+                    }
+                } catch (error) {
+                    Utils.logError("Transaction delete failed", error);
+                    this.showNotification("Gagal menghapus transaksi", false);
+                } finally {
+                    this.showLoading(false);
+                }
             }
-          }
         }
 
         generateTrashHTML() {
             return `
               <div class="form-section">
-                <h3 class="form-section-title">Trash (Item dihapus < 30 hari)</h3>
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Jenis</th>
-                        <th>No. Transaksi</th>
-                        <th>Tanggal</th>
-                        <th>Nama</th>
-                        <th>Dihapus Pada</th>
-                        <th class="action-cell">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="trash-table"></tbody>
-                  </table>
-                </div>
+                  <h3 class="form-section-title">Trash (Item dihapus < 30 hari)</h3>
+                  <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                          <tr>
+                              <th>Jenis</th>
+                              <th>No. Transaksi</th>
+                              <th>Tanggal</th>
+                              <th>Nama</th>
+                              <th>Dihapus Pada</th>
+                              <th class="action-cell">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody id="trash-table"></tbody>
+                    </table>
+                  </div>
               </div>`;
         }
 
@@ -1366,28 +1504,31 @@
             const tableBody = document.getElementById("trash-table");
             if (!tableBody) return;
 
-            tableBody.innerHTML = "";
-            this.trash.forEach(item => {
-                const row = document.createElement("tr");
+            tableBody.innerHTML = this.trash.map(item => {
                 const party = item.customer || item.pemasok || item.penerima || "N/A";
                 const typeName = item.dataKey === "penjualan" ? "Penjualan" : item.dataKey === "pembelian" ? "Pembelian" : "Surat Jalan";
-                row.innerHTML = `
-                  <td>${typeName}</td>
-                  <td>${item.id}</td>
-                  <td>${this.formatDate(item.tanggal)}</td>
-                  <td>${party}</td>
-                  <td>${this.formatDate(item.deletedAt)}</td>
-                  <td class="action-cell">
-                    <button class="btn btn-sm btn-success" onclick="app.restoreTransaction('${item.dataKey}', '${item.id}')">Pulihkan</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.permanentlyDeleteTransaction('${item.id}')">Hapus Permanen</button>
-                  </td>`;
-                tableBody.appendChild(row);
-            });
+                return `
+                <tr>
+                    <td>${typeName}</td>
+                    <td>${item.id}</td>
+                    <td>${this.formatDate(item.tanggal)}</td>
+                    <td>${party}</td>
+                    <td>${this.formatDate(item.deletedAt)}</td>
+                    <td class="action-cell">
+                        <button class="btn btn-sm btn-success" onclick="app.restoreTransaction('${item.dataKey}', '${item.id}')">Pulihkan</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.permanentlyDeleteTransaction('${item.id}')">Hapus Permanen</button>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
-        async restoreTransaction(dataKey, id) {
+        async restoreTransaction(dataKey, id, fromUndo = false) {
             const index = this.trash.findIndex(t => t.id === id && t.dataKey === dataKey);
-            if (index === -1) return;
+            if (index === -1) {
+                // This can happen if user clicks Undo twice.
+                if(fromUndo) this.showNotification("Transaksi sudah dipulihkan.", false);
+                return;
+            };
 
             const [item] = this.trash.splice(index, 1);
             delete item.deletedAt;
@@ -1422,8 +1563,14 @@
           this.activeDropdown = dropdown;
           
           const uniqueItems = new Map();
-          this.itemIndex.forEach((item, key) => {
-              if (showAll || filter === "" || key.includes(filter)) {
+          // Prioritize direct match from index, then filter all items
+          if(this.itemIndex.has(filter)) {
+              const item = this.itemIndex.get(filter);
+              uniqueItems.set(item.code, item);
+          }
+
+          this.data.masterItems.forEach(item => {
+              if (showAll || filter === "" || item.name.toUpperCase().includes(filter) || item.code.toUpperCase().includes(filter)) {
                   uniqueItems.set(item.code, item);
               }
           });
@@ -1482,25 +1629,30 @@
         loadDrafts() {
             try {
                 const draftData = localStorage.getItem(this.DRAFT_KEY);
-                if (draftData) {
-                    this.draftForms = JSON.parse(draftData);
-                    const now = new Date();
-                    Object.keys(this.draftForms).forEach((type) => {
-                        const draft = this.draftForms[type];
-                        if (draft && new Date(draft.expires) > now && (draft.tempItems?.length > 0 || Object.values(draft.formData).some(v => v))) {
-                           if (confirm(`Ditemukan draft ${type} yang belum disimpan. Pulihkan?`)) {
-                                this.restoreDraft(type);
-                            } else {
-                                delete this.draftForms[type];
-                            }
-                        } else if (draft) {
-                             delete this.draftForms[type];
+                if (!draftData) return;
+                
+                this.draftForms = JSON.parse(draftData);
+                const now = new Date();
+
+                Object.keys(this.draftForms).forEach((type) => {
+                    const draft = this.draftForms[type];
+                    if (!draft || !draft.formData || !Array.isArray(draft.tempItems) || new Date(draft.expires) <= now) {
+                        delete this.draftForms[type]; // Clean up invalid or expired drafts
+                    } else if (draft.tempItems.length > 0 || Object.values(draft.formData).some(v => !!v)) {
+                         // Only ask if there is meaningful data
+                        if (confirm(`Ditemukan draft ${type} yang belum disimpan. Pulihkan?`)) {
+                            this.restoreDraft(type);
+                        } else {
+                            delete this.draftForms[type];
                         }
-                    });
-                    localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.draftForms));
-                }
+                    } else {
+                        delete this.draftForms[type]; // Clean up empty drafts
+                    }
+                });
+                localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.draftForms));
             } catch (error) {
                 Utils.logError("Failed to load drafts", error);
+                this.showNotification("Gagal memuat draft", false);
             }
         }
 
@@ -1606,25 +1758,24 @@
             const tableBody = document.querySelector(`#temp-items-table-${type} tbody`);
             if (!tableBody) return;
             const list = this.tempItems[type];
-            tableBody.innerHTML = "";
-
-            list.forEach((item, index) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.code}</td>
-                <td>${item.name}</td>
-                <td class="text-right">${this.formatNumber(item.qty)}</td>
-                <td>${item.unit}</td>
-                ${ type !== "delivery" ? `
-                    <td class="text-right">${this.formatCurrency(item.price)}</td>
-                    <td class="text-right">${this.formatCurrency(item.total)}</td>
-                ` : "" }
-                <td class="action-cell">
-                    <button type="button" class="btn btn-sm btn-danger delete-temp-item-btn" data-id="${item.id}">X</button>
-                </td>`;
-                tableBody.appendChild(row);
-            });
+            
+            tableBody.innerHTML = list.map((item, index) => {
+                return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.code}</td>
+                    <td>${item.name}</td>
+                    <td class="text-right">${this.formatNumber(item.qty)}</td>
+                    <td>${item.unit}</td>
+                    ${ type !== "delivery" ? `
+                        <td class="text-right">${this.formatCurrency(item.price)}</td>
+                        <td class="text-right">${this.formatCurrency(item.total)}</td>
+                    ` : "" }
+                    <td class="action-cell">
+                        <button type="button" class="btn btn-sm btn-danger delete-temp-item-btn" data-id="${item.id}">X</button>
+                    </td>
+                </tr>`;
+            }).join('');
 
             if (type !== "delivery") this.calculateTotals(type);
             this.saveDraft(type);
@@ -1632,16 +1783,26 @@
 
         showNotification(message, isSuccess = true) {
             const notifArea = document.getElementById("notification-area");
-            notifArea.innerHTML = `${message} <button style="float:right; background: none; border: none; font-size: 1rem; cursor: pointer;">&times;</button>`;
+            clearTimeout(this.notificationTimeout);
+
+            notifArea.innerHTML = `${message} <button onclick="this.parentElement.style.display='none';">&times;</button>`;
             notifArea.className = `notification ${isSuccess ? "success" : "error"}`;
             notifArea.style.display = "block";
             window.scrollTo(0, 0);
 
-            notifArea.querySelector("button").onclick = () => {
-                notifArea.style.display = "none";
-            };
-
-            setTimeout(() => {
+            // Re-bind onclick for any new buttons inside the message (like Undo)
+            notifArea.querySelectorAll("button[onclick]").forEach(button => {
+                const func = button.getAttribute('onclick');
+                button.onclick = () => {
+                    try {
+                        eval(func);
+                    } catch (e) {
+                        console.error("Error in notification button", e);
+                    }
+                };
+            });
+            
+            this.notificationTimeout = setTimeout(() => {
                 notifArea.style.display = "none";
             }, 8000);
         }
@@ -1673,7 +1834,7 @@
         }
 
         generateId(type) {
-            let num, prefix;
+            let num, prefix, configKey;
             const date = new Date();
             const year = date.getFullYear().toString().slice(-2);
             const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -1682,17 +1843,28 @@
                 case "sale":
                     num = this.data.config.noPenjualan;
                     prefix = "PJ";
+                    configKey = "noPenjualan";
                     break;
                 case "purchase":
                     num = this.data.config.noPembelian;
                     prefix = "PB";
+                    configKey = "noPembelian";
                     break;
                 case "delivery":
                     num = this.data.config.noSuratJalan;
                     prefix = "SJ";
+                    configKey = "noSuratJalan";
                     break;
             }
-            return `${prefix}${year}${month}-${String(num).padStart(4, "0")}`;
+            const id = `${prefix}${year}${month}-${String(num).padStart(4, "0")}`;
+            const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
+            
+            // Check for uniqueness. If not unique, increment counter and retry.
+            if (this.data[dataKey].some(t => t.id === id)) {
+                this.data.config[configKey]++;
+                return this.generateId(type); // Recursively generate a new ID
+            }
+            return id;
         }
 
         async saveTransaction(type) {
@@ -1706,14 +1878,25 @@
                     throw new Error("Tambahkan minimal satu barang.");
                 }
 
-                for (const field of form.querySelectorAll("[required]")) {
+                for (const field of form.querySelectorAll("[required], [pattern]")) {
+                    const label = field.labels?.[0]?.textContent || field.name;
                     if (!Utils.validateInput(field.value, "required")) {
                         field.focus();
-                        throw new Error(`Field '${field.labels?.[0]?.textContent || field.name}' harus diisi.`);
+                        throw new Error(`Field '${label}' harus diisi.`);
+                    }
+                    if (field.pattern && !new RegExp(field.pattern).test(field.value)) {
+                        field.focus();
+                        throw new Error(`Isian untuk '${label}' tidak valid.`);
                     }
                 }
 
                 const partyType = type === "sale" ? "customer" : type === "purchase" ? "pemasok" : "recipient";
+                const phoneInput = form.querySelector(`#${partyType}Phone-${type}`);
+                if (phoneInput && phoneInput.value && !Utils.validateInput(phoneInput.value, "phone")) {
+                    phoneInput.focus();
+                    throw new Error("Nomor telepon tidak valid.");
+                }
+
                 const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
                 if (partyName) {
                     this.partyNames[partyType].add(partyName);
@@ -1732,7 +1915,7 @@
                     const totals = this.calculateTotals(type);
                     Object.assign(newTrans, {
                         ...totals,
-                        [partyType]: partyName,
+                        [type === "sale" ? "customer" : "pemasok"]: partyName,
                         alamat: this.sanitizeInput(form.querySelector(`#${partyType}Address-${type}`).value),
                         telepon: this.sanitizeInput(form.querySelector(`#${partyType}Phone-${type}`).value),
                         noKendaraan: this.sanitizeInput(form.querySelector(`#vehicleNo-${type}`)?.value),
@@ -1787,51 +1970,51 @@
         }
 
         generateHistoryHTML(type) {
-          const title = type === 'sale' ? 'Penjualan' : type === 'pembelian' ? 'Pembelian' : 'Surat Jalan';
-          const tableId = `${type}-history-table`;
-          const partyHeader = type === 'sale' ? 'Customer' : type === 'pembelian' ? 'Pemasok' : 'Penerima';
-          const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
+            const title = type === 'sale' ? 'Penjualan' : type === 'pembelian' ? 'Pembelian' : 'Surat Jalan';
+            const tableId = `${type}-history-table`;
+            const partyHeader = type === 'sale' ? 'Customer' : type === 'pembelian' ? 'Pemasok' : 'Penerima';
+            const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
 
-          const headers = `
+            const headers = `
               <th>No. Transaksi</th>
               <th>Tanggal</th>
               <th>${partyHeader} & Kontak</th>
               ${type !== 'delivery' ? '<th class="text-right">Total</th>' : '<th>No. Kendaraan</th>'}
               <th class="action-cell">Aksi</th>
-          `;
+            `;
 
-          return `
-            <div class="form-section" style="margin-top: 40px;">
-                <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
-                <div class="history-filters" id="history-filters-${type}">
-                    <div class="form-group">
-                        <label>Cari (ID, Nama)</label>
-                        <input type="text" class="search-query" placeholder="Ketik untuk mencari...">
-                    </div>
-                    <div class="form-group">
-                        <label>Dari Tanggal</label>
-                        <input type="date" class="start-date">
-                    </div>
-                    <div class="form-group">
-                        <label>Sampai Tanggal</label>
-                        <input type="date" class="end-date">
-                    </div>
-                </div>
-                <div class="actions-group" style="margin-bottom: 10px;">
-                  <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr>${headers}</tr></thead>
-                        <tbody id="${tableId}"></tbody>
-                    </table>
-                </div>
-                <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
-                    <button class="btn btn-primary" id="prev-${type}" disabled>&laquo; Sebelumnya</button>
-                    <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
-                    <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya &raquo;</button>
-                </div>
-            </div>`;
+            return `
+              <div class="form-section" style="margin-top: 40px;">
+                  <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
+                  <div class="history-filters" id="history-filters-${type}">
+                      <div class="form-group">
+                          <label>Cari (ID, Nama)</label>
+                          <input type="text" class="search-query" placeholder="Ketik untuk mencari...">
+                      </div>
+                      <div class="form-group">
+                          <label>Dari Tanggal</label>
+                          <input type="date" class="start-date">
+                      </div>
+                      <div class="form-group">
+                          <label>Sampai Tanggal</label>
+                          <input type="date" class="end-date">
+                      </div>
+                  </div>
+                  <div class="actions-group" style="margin-bottom: 10px;">
+                    <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
+                  </div>
+                  <div class="table-container">
+                      <table class="data-table">
+                          <thead><tr>${headers}</tr></thead>
+                          <tbody id="${tableId}"></tbody>
+                      </table>
+                  </div>
+                  <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
+                      <button class="btn btn-primary" id="prev-${type}" disabled>&laquo; Sebelumnya</button>
+                      <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
+                      <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya &raquo;</button>
+                  </div>
+              </div>`;
         }
 
         exportHistoryToCsv(dataKey) {
@@ -1850,8 +2033,8 @@
                     const row = [
                         `"${t.id}"`, `"${t.tanggal}"`, `"${t.customer || t.pemasok || t.penerima}"`,
                         `"${t.alamat || ''}"`, `"${t.telepon || ''}"`, `"${t.noKendaraan || ''}"`, `"${t.metodePembayaran || ''}"`,
-                        `"${t.notes || ''}"`, t.subtotal ?? 0, t.discount ?? 0, t.ppn ?? 0, t.shippingCost ?? 0, t.grandTotal ?? 0,
-                        `"${item.code}"`, `"${item.name}"`, item.qty, `"${item.unit}"`, item.price ?? 0, item.total ?? 0
+                        `"${(t.notes || '').replace(/"/g, '""')}"`, t.subtotal ?? 0, t.discount ?? 0, t.ppn ?? 0, t.shippingCost ?? 0, t.grandTotal ?? 0,
+                        `"${item.code}"`, `"${item.name.replace(/"/g, '""')}"`, item.qty, `"${item.unit}"`, item.price ?? 0, item.total ?? 0
                     ];
                     csvRows.push(row.join(','));
                 });
@@ -1951,7 +2134,7 @@
                 ${transaction.telepon ? `<tr><td>Telepon</td><td>: ${transaction.telepon}</td></tr>` : ""}
             </table>
             <table class="meta-table" style="float:right; width: 45%; margin-top:-65px;">
-                <tr><td width="100">No. ${template === "faktur" ? "Faktur" : "Surat Jalan"}</td><td>: ${transaction.id}</td></tr>
+                <tr><td width="100">No. ${template === "faktur" ? "Faktur" : "Surat Jalan"}</td><td>: ${transaction.id || 'N/A'}</td></tr>
                 <tr><td>Tanggal</td><td>: ${this.formatDate(transaction.tanggal)}</td></tr>
                 ${isTransaction && transaction.ref ? `<tr><td>Ref</td><td>: ${transaction.ref}</td></tr>` : ""}
                 ${transaction.noKendaraan ? `<tr><td>No. Kendaraan</td><td>: ${transaction.noKendaraan}</td></tr>` : ""}
@@ -1962,9 +2145,9 @@
                 metaContent = `
                 <table class="meta-table">
                     <tr><td width="150">Sudah terima dari</td><td>: ${partyName}</td></tr>
-                    <tr><td>Uang Sejumlah</td><td>: <b>${this.formatCurrency(transaction.grandTotal)}</b></td></tr>
+                    <tr><td>Uang Sejumlah</td><td>: <b>${this.formatCurrency(transaction.grandTotal || 0)}</b></td></tr>
                     <tr><td style="vertical-align:baseline;">Terbilang</td><td style="vertical-align:baseline; font-style:italic; text-transform: capitalize;">: ${this.terbilang(grandTotalInteger)} rupiah</td></tr>
-                    <tr><td style="vertical-align:baseline;">Untuk Pembayaran</td><td style="vertical-align:baseline;">: Pelunasan Faktur No. ${transaction.id}</td></tr>
+                    <tr><td style="vertical-align:baseline;">Untuk Pembayaran</td><td style="vertical-align:baseline;">: Pelunasan Faktur No. ${transaction.id || "N/A"}</td></tr>
                     ${transaction.metodePembayaran ? `<tr><td>Metode Pembayaran</td><td>: ${transaction.metodePembayaran}</td></tr>` : ""}
                 </table>`;
             }
@@ -1984,15 +2167,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    ${transaction.items.map((item, i) => `
+                    ${(transaction.items || []).map((item, i) => `
                     <tr>
                         <td style="text-align:center;">${i + 1}</td>
                         <td>${item.name} ${item.code ? `<small>(${item.code})</small>` : ""}</td>
                         <td style="text-align:right;">${this.formatNumber(item.qty)}</td>
                         <td style="text-align:center;">${item.unit || "-"}</td>
                         ${isTransaction ? `
-                        <td style="text-align:right;">${this.formatNumber(item.price)}</td>
-                        <td style="text-align:right;">${this.formatNumber(item.total)}</td>
+                        <td style="text-align:right;">${this.formatNumber(item.price || 0)}</td>
+                        <td style="text-align:right;">${this.formatNumber(item.total || 0)}</td>
                         ` : ""}
                     </tr>
                     `).join("")}
@@ -2001,11 +2184,11 @@
             
             const summaryContent = isTransaction && template === "faktur" ? `
             <table class="summary-table">
-                <tr><td>Subtotal</td><td style="text-align:right;">${this.formatNumber(transaction.subtotal)}</td></tr>
-                ${transaction.discount > 0 ? `<tr><td>Diskon</td><td style="text-align:right;">-${this.formatNumber(transaction.discount)}</td></tr>` : ""}
-                ${transaction.ppn > 0 ? `<tr><td>PPN 11%</td><td style="text-align:right;">${this.formatNumber(transaction.ppn)}</td></tr>` : ""}
-                ${transaction.shippingCost > 0 ? `<tr><td>Ongkos Kirim</td><td style="text-align:right;">${this.formatNumber(transaction.shippingCost)}</td></tr>` : ""}
-                <tr style="border-top: 1px solid black; font-weight:bold;"><td>Total</td><td style="text-align:right;">${this.formatNumber(transaction.grandTotal)}</td></tr>
+                <tr><td>Subtotal</td><td style="text-align:right;">${this.formatNumber(transaction.subtotal || 0)}</td></tr>
+                ${(transaction.discount || 0) > 0 ? `<tr><td>Diskon</td><td style="text-align:right;">-${this.formatNumber(transaction.discount)}</td></tr>` : ""}
+                ${(transaction.ppn || 0) > 0 ? `<tr><td>PPN 11%</td><td style="text-align:right;">${this.formatNumber(transaction.ppn)}</td></tr>` : ""}
+                ${(transaction.shippingCost || 0) > 0 ? `<tr><td>Ongkos Kirim</td><td style="text-align:right;">${this.formatNumber(transaction.shippingCost)}</td></tr>` : ""}
+                <tr style="border-top: 1px solid black; font-weight:bold;"><td>Total</td><td style="text-align:right;">${this.formatNumber(transaction.grandTotal || 0)}</td></tr>
             </table>
             <div style="clear:both;"></div>
             <div style="margin-top: 10px; font-style:italic; text-transform: capitalize;">
@@ -2105,8 +2288,8 @@
                     <td>${party}</td>
                     <td class="text-right">${t.grandTotal !== undefined ? this.formatCurrency(t.grandTotal) : "-"}</td>
                     <td class="action-cell">
-                      <button class="btn btn-sm btn-info" onclick="app.printTransaction('${t.dataKey}', '${t.id}', '${t.type !== 'Surat Jalan' ? 'faktur' : 'surat_jalan'}')">Cetak</button>
-                      <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${t.dataKey}', '${t.id}')">Hapus</button>
+                        <button class="btn btn-sm btn-info" onclick="app.printTransaction('${t.dataKey}', '${t.id}', '${t.dataKey !== 'suratJalan' ? 'faktur' : 'surat_jalan'}')">Cetak</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${t.dataKey}', '${t.id}')">Hapus</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -2116,6 +2299,7 @@
             nilai = Math.floor(Math.abs(nilai));
             const bilangan = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
             
+            if (nilai === 0) return "nol";
             if (nilai < 12) return bilangan[nilai].trim();
             if (nilai < 20) return this.terbilang(nilai - 10) + " belas";
             if (nilai < 100) return (this.terbilang(Math.floor(nilai / 10)) + " puluh " + this.terbilang(nilai % 10)).trim();
@@ -2133,7 +2317,11 @@
             try {
                 if (!dateString) return "-";
                 const date = new Date(dateString);
-                if (isNaN(date.getTime())) return dateString;
+                // Check for invalid date, which can be timezone-related for "YYYY-MM-DD"
+                if (isNaN(date.getTime())) {
+                    const parts = dateString.split(/[-T]/);
+                    return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+                }
                 return date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
             } catch (error) {
                 return dateString;
@@ -2189,7 +2377,7 @@
                     throw new Error('Setiap item harus memiliki properti "code" dan "name".');
                 }
                 this.data.masterItems = items;
-                this.buildItemIndex(); // FIX: Rebuild index
+                this.buildItemIndex();
                 this.saveData();
                 this.updateMasterItemCountDisplay();
                 this.showNotification("Data master barang berhasil disimpan dari JSON.");
@@ -2202,7 +2390,7 @@
         clearMasterItems() {
             if (confirm("Yakin ingin menghapus SEMUA data master barang?")) {
                 this.data.masterItems = [];
-                this.buildItemIndex(); // FIX: Rebuild index
+                this.buildItemIndex();
                 this.saveData();
                 this.updateAllUI();
                 this.showNotification("Semua data master barang telah dihapus.");
@@ -2259,7 +2447,7 @@
             const csvRows = [
                 headers.join(","),
                 ...this.data.masterItems.map((item) =>
-                    headers.map((header) => `"${item[header] || ""}"`).join(",")
+                    headers.map((header) => `"${(item[header] || "").toString().replace(/"/g, '""')}"`).join(",")
                 ),
             ];
             const csvString = csvRows.join("\n");
@@ -2279,21 +2467,31 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const lines = e.target.result.split(/\r\n|\n/);
-                    const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+                    const lines = e.target.result.split(/\r\n|\n/).filter(line => line.trim());
+                    if (lines.length <= 1) throw new Error("File CSV kosong atau tidak valid.");
+
+                    // Regex to handle commas inside quotes
+                    const splitRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+
+                    const headers = lines[0].split(splitRegex).map(h => h.trim().replace(/"/g, ""));
                     if (!headers.includes("code") || !headers.includes("name")) {
                         throw new Error('CSV harus memiliki kolom "code" dan "name".');
                     }
-                    const newItems = lines.slice(1).filter(line => line.trim()).map(line => {
-                        const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+                    
+                    const newItems = lines.slice(1).map(line => {
+                        const values = line.split(splitRegex).map(v => v.trim().replace(/"/g, ""));
                         const item = {};
-                        headers.forEach((header, index) => item[header] = values[index]);
+                        headers.forEach((header, index) => {
+                             item[header] = header === "price" ? (parseInt(values[index]) || 0) : (values[index] || "");
+                        });
                         return item;
-                    });
+                    }).filter(item => item.code && item.name); // Ensure essential fields exist
+
+                    if (newItems.length === 0) throw new Error("Tidak ada data valid untuk diimpor.");
 
                     if (confirm(`Ditemukan ${newItems.length} barang dari CSV. Timpa data yang ada?`)) {
                         this.data.masterItems = newItems;
-                        this.buildItemIndex(); // FIX: Rebuild index
+                        this.buildItemIndex();
                         this.saveData();
                         this.updateAllUI();
                         this.showNotification("Data barang berhasil diimpor.");
@@ -2325,7 +2523,7 @@
             }
 
             this.data.masterItems.unshift({ code, name, unit, price: price || 0 });
-            this.buildItemIndex(); // FIX: Rebuild index
+            this.buildItemIndex();
             this.saveData();
             this.renderMasterItemsTextarea();
             this.updateMasterItemCountDisplay();
@@ -2338,15 +2536,43 @@
             if (!transaction) {
                 this.showNotification("Transaksi tidak ditemukan.", false); return;
             }
-            const printArea = document.getElementById("print-area");
-            printArea.innerHTML = this.generatePrintHTML(transaction, template);
-            window.print();
+
+            const printHTML = this.generatePrintHTML(transaction, template);
+            
+            // Use a print preview modal
+            let modal = document.getElementById("print-preview-modal");
+            if (modal) modal.remove(); // Remove old modal if it exists
+
+            modal = document.createElement("div");
+            modal.id = "print-preview-modal";
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 class="form-section-title">Print Preview</h3>
+                    <div class="modal-body">${printHTML}</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="cancelPrintBtn">Batal</button>
+                        <button class="btn btn-primary" id="confirmPrintBtn">Cetak</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById("cancelPrintBtn").onclick = () => {
+                modal.remove();
+            };
+
+            document.getElementById("confirmPrintBtn").onclick = () => {
+                const printArea = document.getElementById("print-area");
+                printArea.innerHTML = printHTML;
+                window.print();
+                printArea.innerHTML = ""; // Clean up after print
+                modal.remove();
+            };
         }
       } // End of SistemAkuntansi class
 
       // -- APP INITIALIZATION --
       document.addEventListener("DOMContentLoaded", () => {
-        // FIX: Initialize the app only ONCE and store it in a global scope
         window.app = new SistemAkuntansi();
         window.app.init();
 
@@ -2365,11 +2591,10 @@
               activeContent.classList.add("active");
             }
             
-            // Refresh dashboard data when tab is clicked
+            // Refresh data when tab is clicked
             if (tab.dataset.tab === "dashboard") {
               window.app.renderDashboard();
             }
-            // Refresh trash table when settings tab is clicked
             if (tab.dataset.tab === "pengaturan") {
               window.app.renderTrashTable();
             }
