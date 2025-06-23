@@ -1698,60 +1698,61 @@
         }
 
         renderHistoryTable(dataKey, tableId, page = 1) {
-            const tableBody = document.getElementById(tableId);
-            if (!tableBody) return;
+          const tableBody = document.getElementById(tableId);
+          if (!tableBody) return;
 
-            const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
-            const filters = document.getElementById(`history-filters-${type}`);
-            const itemsPerPage = 25;
+          const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
+          const filters = document.getElementById(`history-filters-${type}`);
+          const itemsPerPage = 25;
 
-            const searchQuery = filters ? (filters.querySelector(".search-query")?.value || "").toUpperCase() : "";
-            const startDate = filters ? filters.querySelector(".start-date")?.value : "";
-            const endDate = filters ? filters.querySelector(".end-date")?.value : "";
+          const searchQuery = filters ? (filters.querySelector(".search-query")?.value || "").toUpperCase() : "";
+          const startDate = filters ? filters.querySelector(".start-date")?.value : "";
+          const endDate = filters ? filters.querySelector(".end-date")?.value : "";
 
-            const filteredData = (this.data[dataKey] || []).filter(item => {
-                const party = (item.customer || item.pemasok || item.penerima || "").toUpperCase();
-                const idMatch = item.id.toUpperCase().includes(searchQuery);
-                const partyMatch = party.includes(searchQuery);
-                const dateMatch = (!startDate || item.tanggal >= startDate) && (!endDate || item.tanggal <= endDate);
-                return (idMatch || partyMatch) && dateMatch;
-            });
+          const filteredData = (this.data[dataKey] || []).filter(item => {
+              const party = (item.customer || item.pemasok || item.penerima || "").toUpperCase();
+              const idMatch = item.id.toUpperCase().includes(searchQuery);
+              const partyMatch = party.includes(searchQuery);
+              const dateMatch = (!startDate || item.tanggal >= startDate) && (!endDate || item.tanggal <= endDate);
+              return (idMatch || partyMatch) && dateMatch;
+          });
 
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            page = Math.min(Math.max(1, page), totalPages || 1);
-            const startIndex = (page - 1) * itemsPerPage;
-            const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+          page = Math.min(Math.max(1, page), totalPages || 1);
+          const startIndex = (page - 1) * itemsPerPage;
+          const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-            tableBody.innerHTML = paginatedData.map(item => {
-                const party = item.customer || item.pemasok || item.penerima || "N/A";
-                const isTransaction = dataKey !== "suratJalan";
-                return `
-                <tr>
-                    <td>${item.id}</td>
-                    <td>${this.formatDate(item.tanggal)}</td>
-                    <td>${party}<br><small>${item.telepon || ""}</small></td>
-                    ${isTransaction ? `<td class="text-right">${this.formatCurrency(item.grandTotal)}</td>` : `<td>${item.noKendaraan || ""}</td>`}
-                    <td class="action-cell">
-                        ${dataKey === "penjualan" || dataKey === "pembelian" ? `
-                        <button class="btn btn-sm btn-info" onclick="app.printTransaction('${dataKey}', '${item.id}', 'faktur')">Faktur</button>
-                        <button class="btn btn-sm btn-primary" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">SJ</button>
-                        <button class="btn btn-sm btn-warning" onclick="app.printTransaction('${dataKey}', '${item.id}', 'kwitansi')">Kwitansi</button>
-                        ` : `<button class="btn btn-sm btn-success" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">Cetak</button>`}
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${dataKey}', '${item.id}')">Hapus</button>
-                    </td>
-                </tr>`;
-            }).join('');
-            
-            const paginationContainer = document.getElementById(`pagination-${type}`);
-            if (paginationContainer) {
-                paginationContainer.querySelector(`#page-info-${type}`).textContent = `Halaman ${page} dari ${totalPages}`;
-                const prevButton = paginationContainer.querySelector(`#prev-${type}`);
-                const nextButton = paginationContainer.querySelector(`#next-${type}`);
-                prevButton.disabled = page === 1;
-                nextButton.disabled = page >= totalPages;
-                prevButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page - 1);
-                nextButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page + 1);
-            }
+          tableBody.innerHTML = paginatedData.map(item => {
+              const party = item.customer || item.pemasok || item.penerima || "N/A";
+              const isTransaction = dataKey !== "suratJalan";
+              return `
+              <tr>
+                  <td>${item.id}</td>
+                  <td>${this.formatDate(item.tanggal)}</td>
+                  <td>${party}<br><small>${item.telepon || ""}</small></td>
+                  <td>${item.noKendaraan || "-"}</td>
+                  ${isTransaction ? `<td class="text-right">${this.formatCurrency(item.grandTotal)}</td>` : ''}
+                  <td class="action-cell">
+                      ${dataKey === "penjualan" || dataKey === "pembelian" ? `
+                      <button class="btn btn-sm btn-info" onclick="app.printTransaction('${dataKey}', '${item.id}', 'faktur')">Faktur</button>
+                      <button class="btn btn-sm btn-primary" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">SJ</button>
+                      <button class="btn btn-sm btn-warning" onclick="app.printTransaction('${dataKey}', '${item.id}', 'kwitansi')">Kwitansi</button>
+                      ` : `<button class="btn btn-sm btn-success" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">Cetak</button>`}
+                      <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${dataKey}', '${item.id}')">Hapus</button>
+                  </td>
+              </tr>`;
+          }).join('');
+
+          const paginationContainer = document.getElementById(`pagination-${type}`);
+          if (paginationContainer) {
+              paginationContainer.querySelector(`#page-info-${type}`).textContent = `Halaman ${page} dari ${totalPages}`;
+              const prevButton = paginationContainer.querySelector(`#prev-${type}`);
+              const nextButton = paginationContainer.querySelector(`#next-${type}`);
+              prevButton.disabled = page === 1;
+              nextButton.disabled = page >= totalPages;
+              prevButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page - 1);
+              nextButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page + 1);
+          }
         }
 
         renderTempItemsTable(type) {
@@ -1970,51 +1971,52 @@
         }
 
         generateHistoryHTML(type) {
-            const title = type === 'sale' ? 'Penjualan' : type === 'pembelian' ? 'Pembelian' : 'Surat Jalan';
-            const tableId = `${type}-history-table`;
-            const partyHeader = type === 'sale' ? 'Customer' : type === 'pembelian' ? 'Pemasok' : 'Penerima';
-            const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
+          const title = type === 'sale' ? 'Penjualan' : type === 'purchase' ? 'Pembelian' : 'Surat Jalan';
+          const tableId = `${type}-history-table`;
+          const partyHeader = type === 'sale' ? 'Customer' : type === 'purchase' ? 'Pemasok' : 'Penerima';
+          const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
 
-            const headers = `
-              <th>No. Transaksi</th>
-              <th>Tanggal</th>
-              <th>${partyHeader} & Kontak</th>
-              ${type !== 'delivery' ? '<th class="text-right">Total</th>' : '<th>No. Kendaraan</th>'}
-              <th class="action-cell">Aksi</th>
-            `;
+          const headers = `
+            <th>No. Transaksi</th>
+            <th>Tanggal</th>
+            <th>${partyHeader} & Kontak</th>
+            <th>No. Kendaraan</th>
+            ${type !== 'delivery' ? '<th class="text-right">Total</th>' : ''}
+            <th class="action-cell">Aksi</th>
+          `;
 
-            return `
-              <div class="form-section" style="margin-top: 40px;">
-                  <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
-                  <div class="history-filters" id="history-filters-${type}">
-                      <div class="form-group">
-                          <label>Cari (ID, Nama)</label>
-                          <input type="text" class="search-query" placeholder="Ketik untuk mencari...">
-                      </div>
-                      <div class="form-group">
-                          <label>Dari Tanggal</label>
-                          <input type="date" class="start-date">
-                      </div>
-                      <div class="form-group">
-                          <label>Sampai Tanggal</label>
-                          <input type="date" class="end-date">
-                      </div>
-                  </div>
-                  <div class="actions-group" style="margin-bottom: 10px;">
-                    <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
-                  </div>
-                  <div class="table-container">
-                      <table class="data-table">
-                          <thead><tr>${headers}</tr></thead>
-                          <tbody id="${tableId}"></tbody>
-                      </table>
-                  </div>
-                  <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
-                      <button class="btn btn-primary" id="prev-${type}" disabled>&laquo; Sebelumnya</button>
-                      <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
-                      <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya &raquo;</button>
-                  </div>
-              </div>`;
+          return `
+            <div class="form-section" style="margin-top: 40px;">
+                <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
+                <div class="history-filters" id="history-filters-${type}">
+                    <div class="form-group">
+                        <label>Cari (ID, Nama)</label>
+                        <input type="text" class="search-query" placeholder="Ketik untuk mencari...">
+                    </div>
+                    <div class="form-group">
+                        <label>Dari Tanggal</label>
+                        <input type="date" class="start-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Sampai Tanggal</label>
+                        <input type="date" class="end-date">
+                    </div>
+                </div>
+                <div class="actions-group" style="margin-bottom: 10px;">
+                  <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr>${headers}</tr></thead>
+                        <tbody id="${tableId}"></tbody>
+                    </table>
+                </div>
+                <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
+                    <button class="btn btn-primary" id="prev-${type}" disabled>« Sebelumnya</button>
+                    <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
+                    <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya »</button>
+                </div>
+            </div>`;
         }
 
         exportHistoryToCsv(dataKey) {
@@ -2576,7 +2578,6 @@
         window.app = new SistemAkuntansi();
         window.app.init();
 
-        // Tab switching logic
         const tabs = document.querySelectorAll(".nav-tab");
         const tabContents = document.querySelectorAll(".tab-content");
         
@@ -2591,7 +2592,6 @@
               activeContent.classList.add("active");
             }
             
-            // Refresh data when tab is clicked
             if (tab.dataset.tab === "dashboard") {
               window.app.renderDashboard();
             }
