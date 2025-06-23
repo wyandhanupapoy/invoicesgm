@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Sistem Penjualan dan Pembelian" />
-    <meta name="author" content="Sistem Akuntansi v4.7 - Refined" />
-    <title>Sistem Akuntansi v4.7 (Refined)</title>
+    <meta name="description" content="Sistem Penjualan dan Pembelian dengan Ekspor PDF & Excel" />
+    <meta name="author" content="Sistem Akuntansi v4.8 - Export Ready" />
+    <title>Sistem Akuntansi v4.8 (Export Ready)</title>
     <style>
       :root {
         --primary: #003087;
@@ -29,8 +29,8 @@
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           Helvetica, Arial, sans-serif;
-        background: #f4f6f8;
-        color: var(--text);
+        background: #f4f6f8; 
+        color: var(--text); 
         min-height: 100vh;
         padding: 15px;
         font-size: 15px;
@@ -586,8 +586,8 @@
         }
       }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <div class="loading-overlay" id="loadingOverlay">
       <div class="loading-spinner"></div>
     </div>
@@ -740,6 +740,10 @@
     </div>
 
     <div id="print-area"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <script>
       /**
@@ -796,9 +800,9 @@
        */
       class SistemAkuntansi {
         constructor() {
-          this.STORAGE_KEY = "sistemAkuntansiData_v4.7";
-          this.DRAFT_KEY = "sistemAkuntansiDraft_v4.7";
-          this.TRASH_KEY = "sistemAkuntansiTrash_v4.7";
+          this.STORAGE_KEY = "sistemAkuntansiData_v4.8";
+          this.DRAFT_KEY = "sistemAkuntansiDraft_v4.8";
+          this.TRASH_KEY = "sistemAkuntansiTrash_v4.8";
 
           this.data = null;
           this.trash = [];
@@ -818,7 +822,7 @@
 
         async init() {
           try {
-            this.cleanup(); // Ensure cleanup is called at the start
+            this.cleanup();
             console.log("Starting init...");
             this.showLoading(true);
             await this.loadData();
@@ -912,19 +916,11 @@
           let formFields = `
             <div class="form-group">
                 <label for="transNo-${type}">No. Transaksi</label>
-                <input type="text" id="transNo-${type}" readonly value="${this.generateId(
-                  type
-                )}">
+                <input type="text" id="transNo-${type}" readonly value="${this.generateId(type)}">
             </div>
             <div class="form-group">
-                <label for="${
-                  isTransaction ? "invoiceDate" : "deliveryDate"
-                }-${type}">Tanggal</label>
-                <input type="date" id="${
-                  isTransaction ? "invoiceDate" : "deliveryDate"
-                }-${type}" required value="${new Date()
-            .toISOString()
-            .slice(0, 10)}">
+                <label for="${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}">Tanggal</label>
+                <input type="date" id="${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}" required value="${new Date().toISOString().slice(0, 10)}">
             </div>
             <div class="form-group filterable-dropdown">
                 <label for="${partyType}Name-${type}">Nama ${partyLabel}</label>
@@ -947,16 +943,7 @@
 
           if (isTransaction) {
             formFields += `
-                ${
-                  type === "sale"
-                    ? `
-                <div class="form-group">
-                    <label for="ref-${type}">Ref</label>
-                    <input type="text" id="ref-${type}">
-                </div>
-              `
-                    : ""
-                }
+                ${type === "sale" ? `<div class="form-group"><label for="ref-${type}">Ref</label><input type="text" id="ref-${type}"></div>` : ""}
                 <div class="form-group">
                     <label for="paymentMethod-${type}">Metode Pembayaran</label>
                     <select id="paymentMethod-${type}">
@@ -964,8 +951,7 @@
                         <option value="Tunai">Tunai</option>
                         <option value="Kredit">Kredit</option>
                     </select>
-                </div>
-        `;
+                </div>`;
           }
 
           const itemFields = `
@@ -989,46 +975,19 @@
                         <label for="itemUnit-${type}">Satuan</label>
                         <input type="text" id="itemUnit-${type}">
                     </div>
-                    ${
-                      isTransaction
-                        ? `
-                        <div class="form-group">
-                            <label for="itemPrice-${type}">Harga Satuan (Rp)</label>
-                            <input type="text" id="itemPrice-${type}" class="rupiah-input" required>
-                        </div>
-                      `
-                        : ""
-                    }
+                    ${isTransaction ? `<div class="form-group"><label for="itemPrice-${type}">Harga Satuan (Rp)</label><input type="text" id="itemPrice-${type}" class="rupiah-input" required></div>` : ""}
                     <div class="form-group" style="align-self: flex-end;">
                         <button type="button" id="addItemBtn-${type}" class="btn btn-primary">Tambah Barang</button>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
 
           const tableHeaders = isTransaction
-            ? `
-            <th>No</th>
-            <th>Kode</th>
-            <th>Nama Barang</th>
-            <th class="text-right">Jumlah</th>
-            <th>Satuan</th>
-            <th class="text-right">Harga Satuan</th>
-            <th class="text-right">Total</th>
-            <th class="action-cell">Aksi</th>
-            `
-            : `
-            <th>No</th>
-            <th>Kode</th>
-            <th>Nama Barang</th>
-            <th class="text-right">Jumlah</th>
-            <th>Satuan</th>
-            <th class="action-cell">Aksi</th>
-            `;
+            ? `<th>No</th><th>Kode</th><th>Nama Barang</th><th class="text-right">Jumlah</th><th>Satuan</th><th class="text-right">Harga Satuan</th><th class="text-right">Total</th><th class="action-cell">Aksi</th>`
+            : `<th>No</th><th>Kode</th><th>Nama Barang</th><th class="text-right">Jumlah</th><th>Satuan</th><th class="action-cell">Aksi</th>`;
 
           const summarySection = isTransaction
-            ? `
-            <div class="summary-section">
+            ? `<div class="summary-section">
                 <div class="summary-grid">
                     <label>Subtotal:</label>
                     <div class="total-amount-display" id="subtotal-${type}">Rp 0</div>
@@ -1046,17 +1005,12 @@
                     <label>Grand Total:</label>
                     <div class="total-amount-display" id="grandTotal-${type}">Rp 0</div>
                 </div>
-            </div>
-            `
-            : "";
+            </div>` : "";
 
-          return `
-            <div class="form-section">
+          return `<div class="form-section">
                 <h3 class="form-section-title">Form ${title}</h3>
                 <form id="${type}Form">
-                    <div class="form-grid">
-                        ${formFields}
-                    </div>
+                    <div class="form-grid">${formFields}</div>
                     ${itemFields}
                     <div class="table-container">
                         <table class="data-table" id="temp-items-table-${type}">
@@ -1074,110 +1028,57 @@
                         <button type="button" class="btn btn-warning" onclick="app.resetForm('${type}')">Reset Form</button>
                     </div>
                 </form>
-            </div>
-            `;
+            </div>`;
         }
 
         bindGlobalEvents() {
-          this.cleanup(); // Ensure all listeners are cleared before re-binding
-          const globalController = new AbortController();
-          this.eventControllers.set("global", globalController);
-          const { signal } = globalController;
+            this.cleanup();
+            const globalController = new AbortController();
+            this.eventControllers.set("global", globalController);
+            const { signal } = globalController;
 
-          document.addEventListener(
-            "click",
-            (e) => {
-              if (!e.target.closest(".filterable-dropdown")) {
-                this.closeAllDropdowns();
-              }
-            },
-            { signal }
-          );
+            document.addEventListener("click", (e) => {
+                if (!e.target.closest(".filterable-dropdown")) {
+                    this.closeAllDropdowns();
+                }
+            }, { signal });
 
-          document
-            .getElementById("saveConfigBtn")
-            ?.addEventListener("click", () => this.saveConfig(), { signal });
-          document
-            .getElementById("saveMasterItemsBtn")
-            ?.addEventListener(
-              "click",
-              () => this.saveMasterItemsFromTextarea(),
-              { signal }
-            );
-          document
-            .getElementById("clearMasterItemsBtn")
-            ?.addEventListener("click", () => this.clearMasterItems(), {
-              signal,
-            });
-          document
-            .getElementById("backupDataBtn")
-            ?.addEventListener("click", () => this.backupData(), { signal });
-          document
-            .getElementById("restoreDataBtn")
-            ?.addEventListener(
-              "click",
-              () => document.getElementById("restoreFileInput")?.click(),
-              { signal }
-            );
-          document
-            .getElementById("restoreFileInput")
-            ?.addEventListener("change", (e) => this.restoreData(e), {
-              signal,
-            });
-          document
-            .getElementById("exportCsvBtn")
-            ?.addEventListener("click", () => this.exportMasterItemsToCsv(), {
-              signal,
-            });
-          document
-            .getElementById("importCsvBtn")
-            ?.addEventListener(
-              "click",
-              () => document.getElementById("csvFileInput")?.click(),
-              { signal }
-            );
-          document
-            .getElementById("csvFileInput")
-            ?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), {
-              signal,
-            });
-
-          document
-            .getElementById("add-master-item-form-element")
-            ?.addEventListener(
-              "submit",
-              (e) => {
+            document.getElementById("saveConfigBtn")?.addEventListener("click", () => this.saveConfig(), { signal });
+            document.getElementById("saveMasterItemsBtn")?.addEventListener("click", () => this.saveMasterItemsFromTextarea(), { signal });
+            document.getElementById("clearMasterItemsBtn")?.addEventListener("click", () => this.clearMasterItems(), { signal });
+            document.getElementById("backupDataBtn")?.addEventListener("click", () => this.backupData(), { signal });
+            document.getElementById("restoreDataBtn")?.addEventListener("click", () => document.getElementById("restoreFileInput")?.click(), { signal });
+            document.getElementById("restoreFileInput")?.addEventListener("change", (e) => this.restoreData(e), { signal });
+            document.getElementById("exportCsvBtn")?.addEventListener("click", () => this.exportMasterItemsToCsv(), { signal });
+            document.getElementById("importCsvBtn")?.addEventListener("click", () => document.getElementById("csvFileInput")?.click(), { signal });
+            document.getElementById("csvFileInput")?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), { signal });
+            document.getElementById("add-master-item-form-element")?.addEventListener("submit", (e) => {
                 e.preventDefault();
                 this.addNewMasterItem();
-              },
-              { signal }
-            );
+            }, { signal });
 
-          const dashboardFilters = document.getElementById("dashboard-filters");
-          if (dashboardFilters) {
-            dashboardFilters.addEventListener(
-              "input",
-              Utils.debounce(() => this.renderDashboard(), 300),
-              { signal }
-            );
-          }
-
-          ["sale", "purchase", "delivery"].forEach((type) => {
-            this.bindFormEvents(type);
-            const historyFilters = document.getElementById(
-              `history-filters-${type}`
-            );
-            if (historyFilters) {
-                const formController = new AbortController();
-                this.eventControllers.set(`history-filter-${type}`, formController);
-                historyFilters.addEventListener("input", Utils.debounce(() => {
-                    const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
-                    this.renderHistoryTable(dataKey, `${type}-history-table`);
-                }, 300), { signal: formController.signal });
+            const dashboardFilters = document.getElementById("dashboard-filters");
+            if (dashboardFilters) {
+                dashboardFilters.addEventListener("input", Utils.debounce(() => this.renderDashboard(), 300), { signal });
             }
-          });
-        }
 
+            ["sale", "purchase", "delivery"].forEach((type) => {
+                this.bindFormEvents(type);
+                const historyContainer = document.getElementById(type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan");
+                historyContainer?.addEventListener('click', (e) => {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+
+                    const dataKey = target.getAttribute('data-key');
+                    if (target.id.startsWith('export-excel-btn-')) {
+                        this.exportHistoryToExcel(dataKey);
+                    } else if (target.id.startsWith('export-pdf-btn-')) {
+                        this.exportHistoryToPdf(dataKey);
+                    }
+                });
+            });
+        }
+        
         bindFormEvents(type) {
             const controller = new AbortController();
             this.eventControllers.set(`form-${type}`, controller);
@@ -1215,8 +1116,6 @@
 
             itemSelector?.addEventListener("input", Utils.debounce(() => this.filterDropdown(type), 300), { signal });
             itemSelector?.addEventListener("focus", () => this.filterDropdown(type, true), { signal });
-
-            // Keyboard navigation for item dropdown
             itemSelector?.addEventListener("keydown", (e) => {
                 if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                     e.preventDefault();
@@ -1251,7 +1150,6 @@
             }, { signal });
 
             form.querySelector(`#addItemBtn-${type}`)?.addEventListener("click", () => this.addItemToTempList(type), { signal });
-
             form.querySelector(`#temp-items-table-${type}`)?.addEventListener("click", (e) => {
                 if (e.target.classList.contains("delete-temp-item-btn")) {
                     this.deleteItemFromTempList(parseInt(e.target.dataset.id, 10), type);
@@ -1411,17 +1309,15 @@
                         this.data = defaultData;
                     }
 
-                    // Load party names into Sets
                     this.partyNames.customer = new Set(this.data.partyNames.customer || []);
                     this.partyNames.pemasok = new Set(this.data.partyNames.pemasok || []);
                     this.partyNames.recipient = new Set(this.data.partyNames.recipient || []);
 
-                    // Load and clean trash
                     const trashData = localStorage.getItem(this.TRASH_KEY);
                     if (trashData) {
                         this.trash = JSON.parse(trashData);
                         const cutoff = new Date();
-                        cutoff.setDate(cutoff.getDate() - 30); // Keep for 30 days
+                        cutoff.setDate(cutoff.getDate() - 30);
                         this.trash = this.trash.filter(item => new Date(item.deletedAt) >= cutoff);
                         localStorage.setItem(this.TRASH_KEY, JSON.stringify(this.trash));
                     } else {
@@ -1444,7 +1340,6 @@
             if (!this.data || !Array.isArray(this.data.masterItems)) return;
             this.data.masterItems.forEach(item => {
                 if (item.code) this.itemIndex.set(item.code.toUpperCase(), item);
-                // Only add name index if it doesn't conflict with a code index
                 if (item.name && !this.itemIndex.has(item.name.toUpperCase())) {
                     this.itemIndex.set(item.name.toUpperCase(), item);
                 }
@@ -1458,7 +1353,6 @@
                     const index = this.data[dataKey].findIndex(item => item.id === id);
                     if (index > -1) {
                         const [transaction] = this.data[dataKey].splice(index, 1);
-                        // Add metadata for restoration
                         const trashedItem = { ...transaction, dataKey, deletedAt: new Date().toISOString() };
                         this.trash.unshift(trashedItem);
                         
@@ -1466,7 +1360,6 @@
                         this.saveData();
                         await this.updateAllUI();
                         
-                        // Show notification with Undo option
                         this.showNotification(`Transaksi ${id} dipindahkan ke Trash. <button class="btn btn-sm btn-warning" onclick="app.restoreTransaction('${dataKey}', '${trashedItem.id}', true)">Undo</button>`);
                     }
                 } catch (error) {
@@ -1479,20 +1372,12 @@
         }
 
         generateTrashHTML() {
-            return `
-              <div class="form-section">
+            return `<div class="form-section">
                   <h3 class="form-section-title">Trash (Item dihapus < 30 hari)</h3>
                   <div class="table-container">
                     <table class="data-table">
                         <thead>
-                          <tr>
-                              <th>Jenis</th>
-                              <th>No. Transaksi</th>
-                              <th>Tanggal</th>
-                              <th>Nama</th>
-                              <th>Dihapus Pada</th>
-                              <th class="action-cell">Aksi</th>
-                          </tr>
+                          <tr><th>Jenis</th><th>No. Transaksi</th><th>Tanggal</th><th>Nama</th><th>Dihapus Pada</th><th class="action-cell">Aksi</th></tr>
                         </thead>
                         <tbody id="trash-table"></tbody>
                     </table>
@@ -1507,8 +1392,7 @@
             tableBody.innerHTML = this.trash.map(item => {
                 const party = item.customer || item.pemasok || item.penerima || "N/A";
                 const typeName = item.dataKey === "penjualan" ? "Penjualan" : item.dataKey === "pembelian" ? "Pembelian" : "Surat Jalan";
-                return `
-                <tr>
+                return `<tr>
                     <td>${typeName}</td>
                     <td>${item.id}</td>
                     <td>${this.formatDate(item.tanggal)}</td>
@@ -1525,7 +1409,6 @@
         async restoreTransaction(dataKey, id, fromUndo = false) {
             const index = this.trash.findIndex(t => t.id === id && t.dataKey === dataKey);
             if (index === -1) {
-                // This can happen if user clicks Undo twice.
                 if(fromUndo) this.showNotification("Transaksi sudah dipulihkan.", false);
                 return;
             };
@@ -1563,7 +1446,6 @@
           this.activeDropdown = dropdown;
           
           const uniqueItems = new Map();
-          // Prioritize direct match from index, then filter all items
           if(this.itemIndex.has(filter)) {
               const item = this.itemIndex.get(filter);
               uniqueItems.set(item.code, item);
@@ -1586,11 +1468,9 @@
 
         saveData() {
             try {
-                // Ensure partyNames in data is updated from the Sets
                 this.data.partyNames.customer = [...this.partyNames.customer].sort();
                 this.data.partyNames.pemasok = [...this.partyNames.pemasok].sort();
                 this.data.partyNames.recipient = [...this.partyNames.recipient].sort();
-
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
             } catch (error) {
                 Utils.logError("Failed to save data", error);
@@ -1637,16 +1517,15 @@
                 Object.keys(this.draftForms).forEach((type) => {
                     const draft = this.draftForms[type];
                     if (!draft || !draft.formData || !Array.isArray(draft.tempItems) || new Date(draft.expires) <= now) {
-                        delete this.draftForms[type]; // Clean up invalid or expired drafts
+                        delete this.draftForms[type];
                     } else if (draft.tempItems.length > 0 || Object.values(draft.formData).some(v => !!v)) {
-                         // Only ask if there is meaningful data
                         if (confirm(`Ditemukan draft ${type} yang belum disimpan. Pulihkan?`)) {
                             this.restoreDraft(type);
                         } else {
                             delete this.draftForms[type];
                         }
                     } else {
-                        delete this.draftForms[type]; // Clean up empty drafts
+                        delete this.draftForms[type];
                     }
                 });
                 localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.draftForms));
@@ -1691,6 +1570,23 @@
             }
         }
 
+        _getFilteredHistoryData(dataKey) {
+            const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
+            const filters = document.getElementById(`history-filters-${type}`);
+            const searchQuery = filters ? (filters.querySelector(".search-query")?.value || "").toUpperCase() : "";
+            const startDate = filters ? filters.querySelector(".start-date")?.value : "";
+            const endDate = filters ? filters.querySelector(".end-date")?.value : "";
+
+            const filteredData = (this.data[dataKey] || []).filter(item => {
+                const party = (item.customer || item.pemasok || item.penerima || "").toUpperCase();
+                const idMatch = item.id.toUpperCase().includes(searchQuery);
+                const partyMatch = party.includes(searchQuery);
+                const dateMatch = (!startDate || item.tanggal >= startDate) && (!endDate || item.tanggal <= endDate);
+                return (idMatch || partyMatch) && dateMatch;
+            });
+            return filteredData;
+        }
+
         renderAllHistoryTables() {
             this.renderHistoryTable("penjualan", "sale-history-table");
             this.renderHistoryTable("pembelian", "purchase-history-table");
@@ -1698,61 +1594,48 @@
         }
 
         renderHistoryTable(dataKey, tableId, page = 1) {
-          const tableBody = document.getElementById(tableId);
-          if (!tableBody) return;
+            const tableBody = document.getElementById(tableId);
+            if (!tableBody) return;
 
-          const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
-          const filters = document.getElementById(`history-filters-${type}`);
-          const itemsPerPage = 25;
+            const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
+            const itemsPerPage = 25;
 
-          const searchQuery = filters ? (filters.querySelector(".search-query")?.value || "").toUpperCase() : "";
-          const startDate = filters ? filters.querySelector(".start-date")?.value : "";
-          const endDate = filters ? filters.querySelector(".end-date")?.value : "";
+            const filteredData = this._getFilteredHistoryData(dataKey);
 
-          const filteredData = (this.data[dataKey] || []).filter(item => {
-              const party = (item.customer || item.pemasok || item.penerima || "").toUpperCase();
-              const idMatch = item.id.toUpperCase().includes(searchQuery);
-              const partyMatch = party.includes(searchQuery);
-              const dateMatch = (!startDate || item.tanggal >= startDate) && (!endDate || item.tanggal <= endDate);
-              return (idMatch || partyMatch) && dateMatch;
-          });
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            page = Math.min(Math.max(1, page), totalPages || 1);
+            const startIndex = (page - 1) * itemsPerPage;
+            const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-          page = Math.min(Math.max(1, page), totalPages || 1);
-          const startIndex = (page - 1) * itemsPerPage;
-          const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
-
-          tableBody.innerHTML = paginatedData.map(item => {
-              const party = item.customer || item.pemasok || item.penerima || "N/A";
-              const isTransaction = dataKey !== "suratJalan";
-              return `
-              <tr>
-                  <td>${item.id}</td>
-                  <td>${this.formatDate(item.tanggal)}</td>
-                  <td>${party}<br><small>${item.telepon || ""}</small></td>
-                  <td>${item.noKendaraan || "-"}</td>
-                  ${isTransaction ? `<td class="text-right">${this.formatCurrency(item.grandTotal)}</td>` : ''}
-                  <td class="action-cell">
-                      ${dataKey === "penjualan" || dataKey === "pembelian" ? `
-                      <button class="btn btn-sm btn-info" onclick="app.printTransaction('${dataKey}', '${item.id}', 'faktur')">Faktur</button>
-                      <button class="btn btn-sm btn-primary" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">SJ</button>
-                      <button class="btn btn-sm btn-warning" onclick="app.printTransaction('${dataKey}', '${item.id}', 'kwitansi')">Kwitansi</button>
-                      ` : `<button class="btn btn-sm btn-success" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">Cetak</button>`}
-                      <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${dataKey}', '${item.id}')">Hapus</button>
-                  </td>
-              </tr>`;
-          }).join('');
-
-          const paginationContainer = document.getElementById(`pagination-${type}`);
-          if (paginationContainer) {
-              paginationContainer.querySelector(`#page-info-${type}`).textContent = `Halaman ${page} dari ${totalPages}`;
-              const prevButton = paginationContainer.querySelector(`#prev-${type}`);
-              const nextButton = paginationContainer.querySelector(`#next-${type}`);
-              prevButton.disabled = page === 1;
-              nextButton.disabled = page >= totalPages;
-              prevButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page - 1);
-              nextButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page + 1);
-          }
+            tableBody.innerHTML = paginatedData.map(item => {
+                const party = item.customer || item.pemasok || item.penerima || "N/A";
+                const isTransaction = dataKey !== "suratJalan";
+                return `<tr>
+                    <td>${item.id}</td>
+                    <td>${this.formatDate(item.tanggal)}</td>
+                    <td>${party}<br><small>${item.telepon || ""}</small></td>
+                    ${isTransaction ? `<td class="text-right">${this.formatCurrency(item.grandTotal)}</td>` : `<td>${item.noKendaraan || ""}</td>`}
+                    <td class="action-cell">
+                        ${dataKey !== 'suratJalan' ? `
+                        <button class="btn btn-sm btn-info" onclick="app.printTransaction('${dataKey}', '${item.id}', 'faktur')">Faktur</button>
+                        <button class="btn btn-sm btn-primary" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">SJ</button>
+                        <button class="btn btn-sm btn-warning" onclick="app.printTransaction('${dataKey}', '${item.id}', 'kwitansi')">Kwitansi</button>
+                        ` : `<button class="btn btn-sm btn-success" onclick="app.printTransaction('${dataKey}', '${item.id}', 'surat_jalan')">Cetak</button>`}
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${dataKey}', '${item.id}')">Hapus</button>
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            const paginationContainer = document.getElementById(`pagination-${type}`);
+            if (paginationContainer) {
+                paginationContainer.querySelector(`#page-info-${type}`).textContent = `Halaman ${page} dari ${totalPages}`;
+                const prevButton = paginationContainer.querySelector(`#prev-${type}`);
+                const nextButton = paginationContainer.querySelector(`#next-${type}`);
+                prevButton.disabled = page === 1;
+                nextButton.disabled = page >= totalPages;
+                prevButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page - 1);
+                nextButton.onclick = () => this.renderHistoryTable(dataKey, tableId, page + 1);
+            }
         }
 
         renderTempItemsTable(type) {
@@ -1761,20 +1644,14 @@
             const list = this.tempItems[type];
             
             tableBody.innerHTML = list.map((item, index) => {
-                return `
-                <tr>
+                return `<tr>
                     <td>${index + 1}</td>
                     <td>${item.code}</td>
                     <td>${item.name}</td>
                     <td class="text-right">${this.formatNumber(item.qty)}</td>
                     <td>${item.unit}</td>
-                    ${ type !== "delivery" ? `
-                        <td class="text-right">${this.formatCurrency(item.price)}</td>
-                        <td class="text-right">${this.formatCurrency(item.total)}</td>
-                    ` : "" }
-                    <td class="action-cell">
-                        <button type="button" class="btn btn-sm btn-danger delete-temp-item-btn" data-id="${item.id}">X</button>
-                    </td>
+                    ${ type !== "delivery" ? `<td class="text-right">${this.formatCurrency(item.price)}</td><td class="text-right">${this.formatCurrency(item.total)}</td>` : "" }
+                    <td class="action-cell"><button type="button" class="btn btn-sm btn-danger delete-temp-item-btn" data-id="${item.id}">X</button></td>
                 </tr>`;
             }).join('');
 
@@ -1791,15 +1668,10 @@
             notifArea.style.display = "block";
             window.scrollTo(0, 0);
 
-            // Re-bind onclick for any new buttons inside the message (like Undo)
             notifArea.querySelectorAll("button[onclick]").forEach(button => {
                 const func = button.getAttribute('onclick');
                 button.onclick = () => {
-                    try {
-                        eval(func);
-                    } catch (e) {
-                        console.error("Error in notification button", e);
-                    }
+                    try { eval(func); } catch (e) { console.error("Error in notification button", e); }
                 };
             });
             
@@ -1817,8 +1689,7 @@
 
         calculateTotals(type) {
             const form = document.getElementById(`${type}Form`);
-            if (!form || type === 'delivery')
-                return { subtotal: 0, ppn: 0, discount: 0, shippingCost: 0, grandTotal: 0 };
+            if (!form || type === 'delivery') return { subtotal: 0, ppn: 0, discount: 0, shippingCost: 0, grandTotal: 0 };
 
             const subtotal = this.tempItems[type].reduce((sum, item) => sum + (item.total || 0), 0);
             const discount = parseInt((form.querySelector(`#discount-${type}`)?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
@@ -1841,29 +1712,16 @@
             const month = (date.getMonth() + 1).toString().padStart(2, "0");
 
             switch (type) {
-                case "sale":
-                    num = this.data.config.noPenjualan;
-                    prefix = "PJ";
-                    configKey = "noPenjualan";
-                    break;
-                case "purchase":
-                    num = this.data.config.noPembelian;
-                    prefix = "PB";
-                    configKey = "noPembelian";
-                    break;
-                case "delivery":
-                    num = this.data.config.noSuratJalan;
-                    prefix = "SJ";
-                    configKey = "noSuratJalan";
-                    break;
+                case "sale": num = this.data.config.noPenjualan; prefix = "PJ"; configKey = "noPenjualan"; break;
+                case "purchase": num = this.data.config.noPembelian; prefix = "PB"; configKey = "noPembelian"; break;
+                case "delivery": num = this.data.config.noSuratJalan; prefix = "SJ"; configKey = "noSuratJalan"; break;
             }
             const id = `${prefix}${year}${month}-${String(num).padStart(4, "0")}`;
             const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
             
-            // Check for uniqueness. If not unique, increment counter and retry.
             if (this.data[dataKey].some(t => t.id === id)) {
                 this.data.config[configKey]++;
-                return this.generateId(type); // Recursively generate a new ID
+                return this.generateId(type);
             }
             return id;
         }
@@ -1875,33 +1733,19 @@
                 const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
                 const tempItems = this.tempItems[type];
 
-                if (tempItems.length === 0) {
-                    throw new Error("Tambahkan minimal satu barang.");
-                }
-
+                if (tempItems.length === 0) throw new Error("Tambahkan minimal satu barang.");
                 for (const field of form.querySelectorAll("[required], [pattern]")) {
                     const label = field.labels?.[0]?.textContent || field.name;
-                    if (!Utils.validateInput(field.value, "required")) {
-                        field.focus();
-                        throw new Error(`Field '${label}' harus diisi.`);
-                    }
-                    if (field.pattern && !new RegExp(field.pattern).test(field.value)) {
-                        field.focus();
-                        throw new Error(`Isian untuk '${label}' tidak valid.`);
-                    }
+                    if (!Utils.validateInput(field.value, "required")) { field.focus(); throw new Error(`Field '${label}' harus diisi.`); }
+                    if (field.pattern && !new RegExp(field.pattern).test(field.value)) { field.focus(); throw new Error(`Isian untuk '${label}' tidak valid.`); }
                 }
 
                 const partyType = type === "sale" ? "customer" : type === "purchase" ? "pemasok" : "recipient";
                 const phoneInput = form.querySelector(`#${partyType}Phone-${type}`);
-                if (phoneInput && phoneInput.value && !Utils.validateInput(phoneInput.value, "phone")) {
-                    phoneInput.focus();
-                    throw new Error("Nomor telepon tidak valid.");
-                }
+                if (phoneInput && phoneInput.value && !Utils.validateInput(phoneInput.value, "phone")) { phoneInput.focus(); throw new Error("Nomor telepon tidak valid."); }
 
                 const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
-                if (partyName) {
-                    this.partyNames[partyType].add(partyName);
-                }
+                if (partyName) this.partyNames[partyType].add(partyName);
 
                 const newId = this.generateId(type);
                 const isTransaction = type === "sale" || type === "purchase";
@@ -1943,7 +1787,6 @@
                 this.resetForm(type);
                 await this.updateAllUI();
                 this.showNotification(`Transaksi ${newTrans.id} berhasil disimpan.`);
-
             } catch (error) {
                 Utils.logError("Transaction save failed", error);
                 this.showNotification(`Gagal: ${error.message}`, false);
@@ -1955,88 +1798,70 @@
         resetForm(type) {
             const form = document.getElementById(`${type}Form`);
             if (!form) return;
-
             form.reset();
             this.tempItems[type] = [];
             this.renderTempItemsTable(type);
-
             const isTransaction = type === "sale" || type === "purchase";
             const dateInput = form.querySelector(`#${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}`);
             if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
-            
             form.querySelector(`#transNo-${type}`).value = this.generateId(type);
-
             this.draftForms[type] = null;
             localStorage.setItem(this.DRAFT_KEY, JSON.stringify(this.draftForms));
         }
 
         generateHistoryHTML(type) {
-          const title = type === 'sale' ? 'Penjualan' : type === 'purchase' ? 'Pembelian' : 'Surat Jalan';
-          const tableId = `${type}-history-table`;
-          const partyHeader = type === 'sale' ? 'Customer' : type === 'purchase' ? 'Pemasok' : 'Penerima';
-          const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
+            const title = type === 'sale' ? 'Penjualan' : type === 'purchase' ? 'Pembelian' : 'Surat Jalan';
+            const tableId = `${type}-history-table`;
+            const partyHeader = type === 'sale' ? 'Customer' : type === 'purchase' ? 'Pemasok' : 'Penerima';
+            const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : 'suratJalan';
 
-          const headers = `
-            <th>No. Transaksi</th>
-            <th>Tanggal</th>
-            <th>${partyHeader} & Kontak</th>
-            <th>No. Kendaraan</th>
-            ${type !== 'delivery' ? '<th class="text-right">Total</th>' : ''}
-            <th class="action-cell">Aksi</th>
-          `;
+            const headers = `<th>No. Transaksi</th><th>Tanggal</th><th>${partyHeader} & Kontak</th>${type !== 'delivery' ? '<th class="text-right">Total</th>' : '<th>No. Kendaraan</th>'}<th class="action-cell">Aksi</th>`;
 
-          return `
-            <div class="form-section" style="margin-top: 40px;">
-                <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
-                <div class="history-filters" id="history-filters-${type}">
-                    <div class="form-group">
-                        <label>Cari (ID, Nama)</label>
-                        <input type="text" class="search-query" placeholder="Ketik untuk mencari...">
-                    </div>
-                    <div class="form-group">
-                        <label>Dari Tanggal</label>
-                        <input type="date" class="start-date">
-                    </div>
-                    <div class="form-group">
-                        <label>Sampai Tanggal</label>
-                        <input type="date" class="end-date">
-                    </div>
-                </div>
-                <div class="actions-group" style="margin-bottom: 10px;">
-                  <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr>${headers}</tr></thead>
-                        <tbody id="${tableId}"></tbody>
-                    </table>
-                </div>
-                <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
-                    <button class="btn btn-primary" id="prev-${type}" disabled>« Sebelumnya</button>
-                    <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
-                    <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya »</button>
-                </div>
-            </div>`;
+            return `<div class="form-section" style="margin-top: 40px;">
+                  <h3 class="form-section-title">Riwayat Transaksi ${title}</h3>
+                  <div class="history-filters" id="history-filters-${type}">
+                      <div class="form-group"><label>Cari (ID, Nama)</label><input type="text" class="search-query" placeholder="Ketik untuk mencari..."></div>
+                      <div class="form-group"><label>Dari Tanggal</label><input type="date" class="start-date"></div>
+                      <div class="form-group"><label>Sampai Tanggal</label><input type="date" class="end-date"></div>
+                  </div>
+                  <div class="actions-group" style="margin-bottom: 10px; justify-content: flex-start;">
+                    <button class="btn btn-success" onclick="app.exportHistoryToCsv('${dataKey}')">Export CSV</button>
+                    <button class="btn btn-danger" id="export-pdf-btn-${type}" data-key="${dataKey}">Export PDF</button>
+                    <button class="btn btn-primary" id="export-excel-btn-${type}" data-key="${dataKey}">Export Excel</button>
+                  </div>
+                  <div class="table-container">
+                      <table class="data-table">
+                          <thead><tr>${headers}</tr></thead>
+                          <tbody id="${tableId}"></tbody>
+                      </table>
+                  </div>
+                  <div class="actions-group" id="pagination-${type}" style="justify-content: center;">
+                      <button class="btn btn-primary" id="prev-${type}" disabled>&laquo; Sebelumnya</button>
+                      <span id="page-info-${type}" style="align-self: center; margin: 0 15px;">Halaman 1 dari 1</span>
+                      <button class="btn btn-primary" id="next-${type}" disabled>Berikutnya &raquo;</button>
+                  </div>
+              </div>`;
         }
 
         exportHistoryToCsv(dataKey) {
-            const dataArray = this.data[dataKey] || [];
-            if (dataArray.length === 0) {
+            this.showLoading(true);
+            const transactions = this._getFilteredHistoryData(dataKey);
+            if (transactions.length === 0) {
                 this.showNotification("Tidak ada data untuk diekspor.", false);
+                this.showLoading(false);
                 return;
             }
 
-            const type = dataKey === "penjualan" ? "sale" : dataKey === "pembelian" ? "purchase" : "delivery";
-            const headers = ["No. Transaksi", "Tanggal", type === "sale" ? "Customer" : type === "purchase" ? "Pemasok" : "Penerima", "Alamat", "Telepon", "No. Kendaraan", "Metode Pembayaran", "Catatan", "Subtotal", "Diskon", "PPN", "Ongkir", "Grand Total", "Kode Barang", "Nama Barang", "Jumlah", "Satuan", "Harga Satuan", "Total Barang"];
-            
+            const headers = ["No. Transaksi", "Tanggal", "Customer/Pemasok/Penerima", "Alamat", "Telepon", "No. Kendaraan", "Metode Pembayaran", "Catatan", "Subtotal", "Diskon", "PPN", "Ongkir", "Grand Total", "Kode Barang", "Nama Barang", "Jumlah", "Satuan", "Harga Satuan", "Total Barang"];
             const csvRows = [headers.join(",")];
-            dataArray.forEach(t => {
+            
+            transactions.forEach(t => {
                 t.items.forEach(item => {
                     const row = [
-                        `"${t.id}"`, `"${t.tanggal}"`, `"${t.customer || t.pemasok || t.penerima}"`,
+                        `"${t.id}"`, `"${t.tanggal}"`, `"${t.customer || t.pemasok || t.penerima || ''}"`,
                         `"${t.alamat || ''}"`, `"${t.telepon || ''}"`, `"${t.noKendaraan || ''}"`, `"${t.metodePembayaran || ''}"`,
                         `"${(t.notes || '').replace(/"/g, '""')}"`, t.subtotal ?? 0, t.discount ?? 0, t.ppn ?? 0, t.shippingCost ?? 0, t.grandTotal ?? 0,
-                        `"${item.code}"`, `"${item.name.replace(/"/g, '""')}"`, item.qty, `"${item.unit}"`, item.price ?? 0, item.total ?? 0
+                        `"${item.code}"`, `"${(item.name || '').replace(/"/g, '""')}"`, item.qty, `"${item.unit}"`, item.price ?? 0, item.total ?? 0
                     ];
                     csvRows.push(row.join(','));
                 });
@@ -2050,22 +1875,105 @@
             a.download = `riwayat_${dataKey}_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            this.showNotification("Riwayat transaksi berhasil diekspor.");
+            this.showLoading(false);
+            this.showNotification("Riwayat transaksi berhasil diekspor ke CSV.");
+        }
+        
+        exportHistoryToExcel(dataKey) {
+            this.showLoading(true);
+            const transactions = this._getFilteredHistoryData(dataKey);
+            if (transactions.length === 0) {
+                this.showNotification("Tidak ada data untuk diekspor.", false);
+                this.showLoading(false);
+                return;
+            }
+
+            const flattenedData = [];
+            transactions.forEach(t => {
+                const partner = t.customer || t.pemasok || t.penerima || '';
+                if (t.items.length === 0) {
+                     flattenedData.push({
+                        'No Transaksi': t.id, 'Tanggal': t.tanggal, 'Partner': partner, 'No Kendaraan': t.noKendaraan,
+                        'Metode Bayar': t.metodePembayaran, 'Subtotal': t.subtotal, 'Diskon': t.discount, 'PPN': t.ppn,
+                        'Ongkir': t.shippingCost, 'Grand Total': t.grandTotal,
+                        'Kode Barang': '', 'Nama Barang': '(No items)', 'Jumlah': '', 'Satuan': '', 'Harga Satuan': '', 'Total Barang': ''
+                    });
+                } else {
+                    t.items.forEach(item => {
+                        flattenedData.push({
+                            'No Transaksi': t.id, 'Tanggal': t.tanggal, 'Partner': partner, 'No Kendaraan': t.noKendaraan,
+                            'Metode Bayar': t.metodePembayaran, 'Subtotal': t.subtotal, 'Diskon': t.discount, 'PPN': t.ppn,
+                            'Ongkir': t.shippingCost, 'Grand Total': t.grandTotal,
+                            'Kode Barang': item.code, 'Nama Barang': item.name, 'Jumlah': item.qty, 'Satuan': item.unit,
+                            'Harga Satuan': item.price, 'Total Barang': item.total
+                        });
+                    });
+                }
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+            worksheet['!cols'] = [
+                { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, 
+                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+                { wch: 15 }, { wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 15 }
+            ];
+            
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan');
+            XLSX.writeFile(workbook, `Laporan_${dataKey}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            this.showLoading(false);
+            this.showNotification("Riwayat transaksi berhasil diekspor ke Excel.");
+        }
+
+        exportHistoryToPdf(dataKey) {
+            this.showLoading(true);
+            const transactions = this._getFilteredHistoryData(dataKey);
+            if (transactions.length === 0) {
+                this.showNotification("Tidak ada data untuk diekspor.", false);
+                this.showLoading(false);
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+            
+            const head = [['ID', 'Tanggal', 'Partner', 'No. Kend', 'Item', 'Qty', 'Harga', 'Total']];
+            const body = [];
+            transactions.forEach(t => {
+                t.items.forEach(item => {
+                    body.push([
+                        t.id, t.tanggal, t.customer || t.pemasok || t.penerima || '', t.noKendaraan || '-',
+                        item.name, this.formatNumber(item.qty), this.formatCurrency(item.price, false), this.formatCurrency(item.total, false)
+                    ]);
+                });
+            });
+
+            doc.autoTable({
+                head: head,
+                body: body,
+                startY: 25,
+                headStyles: { fillColor: [0, 48, 135] },
+                didDrawPage: (data) => {
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Laporan ${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)}`, data.settings.margin.left, 15);
+                    const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                    doc.setFontSize(10);
+                    doc.text(`Dicetak pada: ${today}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, 15, { align: 'right' });
+                },
+            });
+
+            doc.save(`Laporan_${dataKey}_${new Date().toISOString().slice(0, 10)}.pdf`);
+            this.showLoading(false);
+            this.showNotification("Riwayat transaksi berhasil diekspor ke PDF.");
         }
         
         generateDashboardHTML() {
-            return `
-              <div class="form-section">
+            return `<div class="form-section">
                   <h3 class="form-section-title">Statistik</h3>
                   <div class="history-filters" id="dashboard-filters">
-                      <div class="form-group">
-                          <label for="dashboard-start-date">Dari Tanggal</label>
-                          <input type="date" class="start-date" id="dashboard-start-date">
-                      </div>
-                      <div class="form-group">
-                          <label for="dashboard-end-date">Sampai Tanggal</label>
-                          <input type="date" class="end-date" id="dashboard-end-date">
-                      </div>
+                      <div class="form-group"><label for="dashboard-start-date">Dari Tanggal</label><input type="date" class="start-date" id="dashboard-start-date"></div>
+                      <div class="form-group"><label for="dashboard-end-date">Sampai Tanggal</label><input type="date" class="end-date" id="dashboard-end-date"></div>
                   </div>
                   <div class="stat-cards" id="dashboard-stats"></div>
               </div>
@@ -2074,14 +1982,7 @@
                   <div class="table-container">
                       <table class="data-table" id="dashboard-transactions-table">
                           <thead>
-                              <tr>
-                                  <th>Jenis</th>
-                                  <th>No. Transaksi</th>
-                                  <th>Tanggal</th>
-                                  <th>Nama</th>
-                                  <th class="text-right">Total</th>
-                                  <th class="action-cell">Aksi</th>
-                              </tr>
+                              <tr><th>Jenis</th><th>No. Transaksi</th><th>Tanggal</th><th>Nama</th><th class="text-right">Total</th><th class="action-cell">Aksi</th></tr>
                           </thead>
                           <tbody></tbody>
                       </table>
@@ -2090,28 +1991,13 @@
         }
 
         generateAddItemFormHTML() {
-            return `
-              <form id="add-master-item-form-element">
+            return `<form id="add-master-item-form-element">
                   <div class="form-grid" style="align-items: flex-end;">
-                      <div class="form-group">
-                          <label for="newItemCode">Kode Barang</label>
-                          <input type="text" id="newItemCode" required pattern="[A-Za-z0-9-]{1,20}">
-                      </div>
-                      <div class="form-group">
-                          <label for="newItemName">Nama Barang</label>
-                          <input type="text" id="newItemName" required maxlength="100">
-                      </div>
-                      <div class="form-group">
-                          <label for="newItemUnit">Satuan</label>
-                          <input type="text" id="newItemUnit" placeholder="e.g., kg, unit, m">
-                      </div>
-                      <div class="form-group">
-                          <label for="newItemPrice">Harga Jual Default</label>
-                          <input type="text" id="newItemPrice" class="rupiah-input" value="0">
-                      </div>
-                      <div class="form-group">
-                          <button type="submit" class="btn btn-primary">Tambah ke Master</button>
-                      </div>
+                      <div class="form-group"><label for="newItemCode">Kode Barang</label><input type="text" id="newItemCode" required pattern="[A-Za-z0-9-]{1,20}"></div>
+                      <div class="form-group"><label for="newItemName">Nama Barang</label><input type="text" id="newItemName" required maxlength="100"></div>
+                      <div class="form-group"><label for="newItemUnit">Satuan</label><input type="text" id="newItemUnit" placeholder="e.g., kg, unit, m"></div>
+                      <div class="form-group"><label for="newItemPrice">Harga Jual Default</label><input type="text" id="newItemPrice" class="rupiah-input" value="0"></div>
+                      <div class="form-group"><button type="submit" class="btn btn-primary">Tambah ke Master</button></div>
                   </div>
               </form>`;
         }
@@ -2120,17 +2006,10 @@
             const config = this.data.config;
             const isTransaction = transaction.grandTotal !== undefined;
             const partyName = transaction.customer || transaction.pemasok || transaction.penerima || 'N/A';
-            
-            const title = template === "faktur"
-                ? `FAKTUR ${transaction.customer ? "PENJUALAN" : "PEMBELIAN"}`
-                : template === "kwitansi"
-                ? "KWITANSI PEMBAYARAN"
-                : "SURAT JALAN";
-
+            const title = template === "faktur" ? `FAKTUR ${transaction.customer ? "PENJUALAN" : "PEMBELIAN"}` : template === "kwitansi" ? "KWITANSI PEMBAYARAN" : "SURAT JALAN";
             const grandTotalInteger = Math.floor(transaction.grandTotal || 0);
 
-            let metaContent = `
-            <table class="meta-table">
+            let metaContent = `<table class="meta-table">
                 <tr><td style="width:120px;">Kepada Yth.</td><td>: ${partyName}</td></tr>
                 <tr><td>Alamat</td><td>: ${transaction.alamat || "-"}</td></tr>
                 ${transaction.telepon ? `<tr><td>Telepon</td><td>: ${transaction.telepon}</td></tr>` : ""}
@@ -2140,12 +2019,10 @@
                 <tr><td>Tanggal</td><td>: ${this.formatDate(transaction.tanggal)}</td></tr>
                 ${isTransaction && transaction.ref ? `<tr><td>Ref</td><td>: ${transaction.ref}</td></tr>` : ""}
                 ${transaction.noKendaraan ? `<tr><td>No. Kendaraan</td><td>: ${transaction.noKendaraan}</td></tr>` : ""}
-            </table>
-            <div style="clear:both;"></div>`;
+            </table><div style="clear:both;"></div>`;
 
             if (template === "kwitansi") {
-                metaContent = `
-                <table class="meta-table">
+                metaContent = `<table class="meta-table">
                     <tr><td width="150">Sudah terima dari</td><td>: ${partyName}</td></tr>
                     <tr><td>Uang Sejumlah</td><td>: <b>${this.formatCurrency(transaction.grandTotal || 0)}</b></td></tr>
                     <tr><td style="vertical-align:baseline;">Terbilang</td><td style="vertical-align:baseline; font-style:italic; text-transform: capitalize;">: ${this.terbilang(grandTotalInteger)} rupiah</td></tr>
@@ -2154,88 +2031,47 @@
                 </table>`;
             }
 
-            const itemsContent = template !== "kwitansi" ? `
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th style="width:5%;">No</th>
-                        <th style="width:40%;">Nama Barang</th>
-                        <th style="width:10%; text-align:right;">Qty</th>
-                        <th style="width:10%; text-align:center;">Satuan</th>
-                        ${isTransaction ? `
-                        <th style="width:15%; text-align:right;">Harga Satuan</th>
-                        <th style="width:20%; text-align:right;">Jumlah</th>
-                        ` : ""}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${(transaction.items || []).map((item, i) => `
-                    <tr>
-                        <td style="text-align:center;">${i + 1}</td>
-                        <td>${item.name} ${item.code ? `<small>(${item.code})</small>` : ""}</td>
-                        <td style="text-align:right;">${this.formatNumber(item.qty)}</td>
-                        <td style="text-align:center;">${item.unit || "-"}</td>
-                        ${isTransaction ? `
-                        <td style="text-align:right;">${this.formatNumber(item.price || 0)}</td>
-                        <td style="text-align:right;">${this.formatNumber(item.total || 0)}</td>
-                        ` : ""}
-                    </tr>
-                    `).join("")}
-                </tbody>
-            </table>` : "";
+            const itemsContent = template !== "kwitansi" ? `<table class="items-table">
+                <thead><tr><th style="width:5%;">No</th><th style="width:40%;">Nama Barang</th><th style="width:10%; text-align:right;">Qty</th><th style="width:10%; text-align:center;">Satuan</th>
+                ${isTransaction ? `<th style="width:15%; text-align:right;">Harga Satuan</th><th style="width:20%; text-align:right;">Jumlah</th>` : ""}
+                </tr></thead><tbody>
+                ${(transaction.items || []).map((item, i) => `<tr>
+                    <td style="text-align:center;">${i + 1}</td>
+                    <td>${item.name} ${item.code ? `<small>(${item.code})</small>` : ""}</td>
+                    <td style="text-align:right;">${this.formatNumber(item.qty)}</td>
+                    <td style="text-align:center;">${item.unit || "-"}</td>
+                    ${isTransaction ? `<td style="text-align:right;">${this.formatNumber(item.price || 0)}</td><td style="text-align:right;">${this.formatNumber(item.total || 0)}</td>` : ""}
+                </tr>`).join("")}</tbody></table>` : "";
             
-            const summaryContent = isTransaction && template === "faktur" ? `
-            <table class="summary-table">
+            const summaryContent = isTransaction && template === "faktur" ? `<table class="summary-table">
                 <tr><td>Subtotal</td><td style="text-align:right;">${this.formatNumber(transaction.subtotal || 0)}</td></tr>
                 ${(transaction.discount || 0) > 0 ? `<tr><td>Diskon</td><td style="text-align:right;">-${this.formatNumber(transaction.discount)}</td></tr>` : ""}
                 ${(transaction.ppn || 0) > 0 ? `<tr><td>PPN 11%</td><td style="text-align:right;">${this.formatNumber(transaction.ppn)}</td></tr>` : ""}
                 ${(transaction.shippingCost || 0) > 0 ? `<tr><td>Ongkos Kirim</td><td style="text-align:right;">${this.formatNumber(transaction.shippingCost)}</td></tr>` : ""}
                 <tr style="border-top: 1px solid black; font-weight:bold;"><td>Total</td><td style="text-align:right;">${this.formatNumber(transaction.grandTotal || 0)}</td></tr>
-            </table>
-            <div style="clear:both;"></div>
-            <div style="margin-top: 10px; font-style:italic; text-transform: capitalize;">
-                Terbilang: ${this.terbilang(grandTotalInteger)} rupiah
-            </div>` : "";
+            </table><div style="clear:both;"></div>
+            <div style="margin-top: 10px; font-style:italic; text-transform: capitalize;">Terbilang: ${this.terbilang(grandTotalInteger)} rupiah</div>` : "";
 
-            const signatures = 
-                template === "surat_jalan" ? `
-                <div class="print-signatures">
-                    <div><p>Pengirim,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                    <div><p>Gudang,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                    <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                </div>` : 
-                template === "kwitansi" ? `
-                <div class="print-signatures" style="justify-content:flex-end;">
-                    <div><p>Bandung, ${this.formatDate(new Date())}</p><p>Penerima,</p><div class="signature-space"></div><p>(${config.namaPerusahaan})</p></div>
-                </div>` :
+            const signatures = template === "surat_jalan" ? `<div class="print-signatures">
+                <div><p>Pengirim,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
+                <div><p>Gudang,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
+                <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div></div>` :
+                template === "kwitansi" ? `<div class="print-signatures" style="justify-content:flex-end;">
+                <div><p>Bandung, ${this.formatDate(new Date())}</p><p>Penerima,</p><div class="signature-space"></div><p>(${config.namaPerusahaan})</p></div></div>` :
                 `<div class="print-signatures">
-                    <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                    <div><p>Hormat Kami,</p><div class="signature-space"></div><p>(${config.namaPerusahaan})</p></div>
-                </div>`;
+                <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
+                <div><p>Hormat Kami,</p><div class="signature-space"></div><p>(${config.namaPerusahaan})</p></div></div>`;
             
-            return `
-            <div class="page printable-content">
-                <div class="print-header">
-                    <div class="company-info">
-                        <h3>${config.namaPerusahaan}</h3>
-                        <p>${config.tagline}</p>
-                        <p>${config.alamatPerusahaan}</p>
-                        <p>${config.kontak}</p>
-                    </div>
+            return `<div class="page printable-content"><div class="print-header">
+                    <div class="company-info"><h3>${config.namaPerusahaan}</h3><p>${config.tagline}</p><p>${config.alamatPerusahaan}</p><p>${config.kontak}</p></div>
                     <img src="${config.logoUrl || 'https://via.placeholder.com/150x50.png?text=Logo'}" class="logo" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50.png?text=Logo';">
-                </div>
-                <div class="print-section ${template === 'kwitansi' ? 'kwitansi' : ''}">
+                </div><div class="print-section ${template === 'kwitansi' ? 'kwitansi' : ''}">
                     <h4 style="text-decoration: underline; text-align:center; margin-bottom: 5mm;">${title}</h4>
-                    ${metaContent}
-                    ${itemsContent}
-                    ${summaryContent}
+                    ${metaContent}${itemsContent}${summaryContent}
                     ${transaction.notes ? `<div style="border-top: 1px solid #ccc; margin-top: 5mm; padding-top: 5mm;"><p><b>Keterangan:</b> ${transaction.notes}</p></div>` : ""}
-                </div>
-                <div class="print-footer">
+                </div><div class="print-footer">
                     ${isTransaction && template === "faktur" ? `<p style="font-size:8pt; text-align:center;">Pembayaran mohon di transfer ke rekening ${config.rekening}</p>` : ""}
-                    ${signatures}
-                </div>
-            </div>`;
+                    ${signatures}</div></div>`;
         }
 
         async renderDashboard() {
@@ -2246,61 +2082,45 @@
             const filters = document.getElementById("dashboard-filters");
             const startDate = filters.querySelector(".start-date")?.value;
             const endDate = filters.querySelector(".end-date")?.value;
-            
             const filterPredicate = t => (!startDate || t.tanggal >= startDate) && (!endDate || t.tanggal <= endDate);
 
             const filteredSales = this.data.penjualan.filter(filterPredicate);
             const filteredPurchases = this.data.pembelian.filter(filterPredicate);
-
             const totalSales = filteredSales.reduce((sum, t) => sum + (t.grandTotal || 0), 0);
             const totalPurchases = filteredPurchases.reduce((sum, t) => sum + (t.grandTotal || 0), 0);
             const profit = totalSales - totalPurchases;
-
             const allTransactions = [
                 ...this.data.penjualan.map((t) => ({ ...t, type: "Penjualan", dataKey: "penjualan" })),
                 ...this.data.pembelian.map((t) => ({ ...t, type: "Pembelian", dataKey: "pembelian" })),
                 ...this.data.suratJalan.map((t) => ({ ...t, type: "Surat Jalan", dataKey: "suratJalan" })),
             ].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-            statsContainer.innerHTML = `
-            <div class="stat-card">
-                <div class="stat-card-title">Total Penjualan (Filtered)</div>
-                <div class="stat-card-value profit">${this.formatCurrency(totalSales)}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-title">Total Pembelian (Filtered)</div>
-                <div class="stat-card-value loss">${this.formatCurrency(totalPurchases)}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-title">Laba Kotor (Filtered)</div>
-                <div class="stat-card-value ${profit >= 0 ? "profit" : "loss"}">${this.formatCurrency(profit)}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-title">Jumlah Transaksi (Total)</div>
-                <div class="stat-card-value">${this.formatNumber(allTransactions.length)}</div>
+            statsContainer.innerHTML = `<div class="stat-card">
+                <div class="stat-card-title">Total Penjualan (Filtered)</div><div class="stat-card-value profit">${this.formatCurrency(totalSales)}</div>
+            </div><div class="stat-card">
+                <div class="stat-card-title">Total Pembelian (Filtered)</div><div class="stat-card-value loss">${this.formatCurrency(totalPurchases)}</div>
+            </div><div class="stat-card">
+                <div class="stat-card-title">Laba Kotor (Filtered)</div><div class="stat-card-value ${profit >= 0 ? "profit" : "loss"}">${this.formatCurrency(profit)}</div>
+            </div><div class="stat-card">
+                <div class="stat-card-title">Jumlah Transaksi (Total)</div><div class="stat-card-value">${this.formatNumber(allTransactions.length)}</div>
             </div>`;
 
             tableBody.innerHTML = allTransactions.slice(0, 50).map(t => {
                 const party = t.customer || t.pemasok || t.penerima || "N/A";
-                return `
-                <tr>
+                return `<tr>
                     <td><span class="btn btn-sm ${t.dataKey === 'penjualan' ? 'btn-success' : t.dataKey === 'pembelian' ? 'btn-danger' : 'btn-info'}">${t.type}</span></td>
-                    <td>${t.id}</td>
-                    <td>${this.formatDate(t.tanggal)}</td>
-                    <td>${party}</td>
+                    <td>${t.id}</td><td>${this.formatDate(t.tanggal)}</td><td>${party}</td>
                     <td class="text-right">${t.grandTotal !== undefined ? this.formatCurrency(t.grandTotal) : "-"}</td>
                     <td class="action-cell">
                         <button class="btn btn-sm btn-info" onclick="app.printTransaction('${t.dataKey}', '${t.id}', '${t.dataKey !== 'suratJalan' ? 'faktur' : 'surat_jalan'}')">Cetak</button>
                         <button class="btn btn-sm btn-danger" onclick="app.deleteTransaction('${t.dataKey}', '${t.id}')">Hapus</button>
-                    </td>
-                </tr>`;
+                    </td></tr>`;
             }).join('');
         }
         
         terbilang(nilai) {
             nilai = Math.floor(Math.abs(nilai));
             const bilangan = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-            
             if (nilai === 0) return "nol";
             if (nilai < 12) return bilangan[nilai].trim();
             if (nilai < 20) return this.terbilang(nilai - 10) + " belas";
@@ -2319,7 +2139,6 @@
             try {
                 if (!dateString) return "-";
                 const date = new Date(dateString);
-                // Check for invalid date, which can be timezone-related for "YYYY-MM-DD"
                 if (isNaN(date.getTime())) {
                     const parts = dateString.split(/[-T]/);
                     return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
@@ -2337,16 +2156,12 @@
 
         async renderMasterItemsTextarea() {
             const textarea = document.getElementById("masterItemJson");
-            if (textarea) {
-                textarea.value = JSON.stringify(this.data.masterItems, null, 2);
-            }
+            if (textarea) textarea.value = JSON.stringify(this.data.masterItems, null, 2);
         }
 
         updateMasterItemCountDisplay() {
             const countSpan = document.getElementById("master-item-count");
-            if (countSpan) {
-                countSpan.textContent = this.data.masterItems.length;
-            }
+            if (countSpan) countSpan.textContent = this.data.masterItems.length;
         }
 
         loadConfigToForm() {
@@ -2375,9 +2190,7 @@
             try {
                 const items = JSON.parse(textarea.value);
                 if (!Array.isArray(items)) throw new Error("Format JSON harus berupa array.");
-                if (!items.every(item => item.hasOwnProperty("code") && item.hasOwnProperty("name"))) {
-                    throw new Error('Setiap item harus memiliki properti "code" dan "name".');
-                }
+                if (!items.every(item => item.hasOwnProperty("code") && item.hasOwnProperty("name"))) throw new Error('Setiap item harus memiliki properti "code" dan "name".');
                 this.data.masterItems = items;
                 this.buildItemIndex();
                 this.saveData();
@@ -2414,7 +2227,6 @@
         restoreData(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
@@ -2423,7 +2235,7 @@
                         if (confirm("Yakin ingin memulihkan data? Data saat ini akan ditimpa.")) {
                             this.data = restoredData;
                             this.saveData();
-                            await this.init(); // Re-initialize the entire app with new data
+                            await this.init();
                             this.showNotification("Data berhasil dipulihkan. Halaman akan dimuat ulang.");
                             setTimeout(() => window.location.reload(), 1500);
                         }
@@ -2446,12 +2258,7 @@
                 return;
             }
             const headers = ["code", "name", "unit", "price"];
-            const csvRows = [
-                headers.join(","),
-                ...this.data.masterItems.map((item) =>
-                    headers.map((header) => `"${(item[header] || "").toString().replace(/"/g, '""')}"`).join(",")
-                ),
-            ];
+            const csvRows = [headers.join(","), ...this.data.masterItems.map((item) => headers.map((header) => `"${(item[header] || "").toString().replace(/"/g, '""')}"`).join(","))];
             const csvString = csvRows.join("\n");
             const blob = new Blob([`\uFEFF${csvString}`], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
@@ -2465,32 +2272,21 @@
         importMasterItemsFromCsv(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const lines = e.target.result.split(/\r\n|\n/).filter(line => line.trim());
                     if (lines.length <= 1) throw new Error("File CSV kosong atau tidak valid.");
-
-                    // Regex to handle commas inside quotes
                     const splitRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-
                     const headers = lines[0].split(splitRegex).map(h => h.trim().replace(/"/g, ""));
-                    if (!headers.includes("code") || !headers.includes("name")) {
-                        throw new Error('CSV harus memiliki kolom "code" dan "name".');
-                    }
-                    
+                    if (!headers.includes("code") || !headers.includes("name")) throw new Error('CSV harus memiliki kolom "code" dan "name".');
                     const newItems = lines.slice(1).map(line => {
                         const values = line.split(splitRegex).map(v => v.trim().replace(/"/g, ""));
                         const item = {};
-                        headers.forEach((header, index) => {
-                             item[header] = header === "price" ? (parseInt(values[index]) || 0) : (values[index] || "");
-                        });
+                        headers.forEach((header, index) => { item[header] = header === "price" ? (parseInt(values[index]) || 0) : (values[index] || ""); });
                         return item;
-                    }).filter(item => item.code && item.name); // Ensure essential fields exist
-
+                    }).filter(item => item.code && item.name);
                     if (newItems.length === 0) throw new Error("Tidak ada data valid untuk diimpor.");
-
                     if (confirm(`Ditemukan ${newItems.length} barang dari CSV. Timpa data yang ada?`)) {
                         this.data.masterItems = newItems;
                         this.buildItemIndex();
@@ -2514,15 +2310,9 @@
             const unit = document.getElementById("newItemUnit").value.trim();
             const price = parseInt(document.getElementById("newItemPrice").value.replace(/[^0-9]/g, ""), 10) || 0;
 
-            if (!code || !name) {
-                this.showNotification("Kode dan Nama Barang harus diisi.", false); return;
-            }
-            if (!/^[A-Za-z0-9-]{1,20}$/.test(code)) {
-                this.showNotification("Kode hanya boleh berisi huruf, angka, dan hubung (-), maks 20 karakter.", false); return;
-            }
-            if (this.data.masterItems.some((item) => item.code.toUpperCase() === code.toUpperCase())) {
-                this.showNotification(`Kode barang '${code}' sudah ada.`, false); return;
-            }
+            if (!code || !name) { this.showNotification("Kode dan Nama Barang harus diisi.", false); return; }
+            if (!/^[A-Za-z0-9-]{1,20}$/.test(code)) { this.showNotification("Kode hanya boleh berisi huruf, angka, dan hubung (-), maks 20 karakter.", false); return; }
+            if (this.data.masterItems.some((item) => item.code.toUpperCase() === code.toUpperCase())) { this.showNotification(`Kode barang '${code}' sudah ada.`, false); return; }
 
             this.data.masterItems.unshift({ code, name, unit, price: price || 0 });
             this.buildItemIndex();
@@ -2535,72 +2325,49 @@
 
         printTransaction(dataKey, id, template) {
             const transaction = this.data[dataKey].find((t) => t.id === id);
-            if (!transaction) {
-                this.showNotification("Transaksi tidak ditemukan.", false); return;
-            }
-
+            if (!transaction) { this.showNotification("Transaksi tidak ditemukan.", false); return; }
             const printHTML = this.generatePrintHTML(transaction, template);
             
-            // Use a print preview modal
             let modal = document.getElementById("print-preview-modal");
-            if (modal) modal.remove(); // Remove old modal if it exists
-
+            if (modal) modal.remove();
             modal = document.createElement("div");
             modal.id = "print-preview-modal";
-            modal.innerHTML = `
-                <div class="modal-content">
+            modal.innerHTML = `<div class="modal-content">
                     <h3 class="form-section-title">Print Preview</h3>
                     <div class="modal-body">${printHTML}</div>
                     <div class="modal-actions">
                         <button class="btn btn-secondary" id="cancelPrintBtn">Batal</button>
                         <button class="btn btn-primary" id="confirmPrintBtn">Cetak</button>
-                    </div>
-                </div>
-            `;
+                    </div></div>`;
             document.body.appendChild(modal);
-
-            document.getElementById("cancelPrintBtn").onclick = () => {
-                modal.remove();
-            };
-
+            document.getElementById("cancelPrintBtn").onclick = () => modal.remove();
             document.getElementById("confirmPrintBtn").onclick = () => {
                 const printArea = document.getElementById("print-area");
                 printArea.innerHTML = printHTML;
                 window.print();
-                printArea.innerHTML = ""; // Clean up after print
+                printArea.innerHTML = "";
                 modal.remove();
             };
         }
-      } // End of SistemAkuntansi class
+      }
 
-      // -- APP INITIALIZATION --
       document.addEventListener("DOMContentLoaded", () => {
         window.app = new SistemAkuntansi();
         window.app.init();
-
         const tabs = document.querySelectorAll(".nav-tab");
         const tabContents = document.querySelectorAll(".tab-content");
-        
         tabs.forEach((tab) => {
           tab.addEventListener("click", () => {
             tabs.forEach((t) => t.classList.remove("active"));
             tabContents.forEach((c) => c.classList.remove("active"));
-
             tab.classList.add("active");
             const activeContent = document.getElementById(tab.dataset.tab);
-            if (activeContent) {
-              activeContent.classList.add("active");
-            }
-            
-            if (tab.dataset.tab === "dashboard") {
-              window.app.renderDashboard();
-            }
-            if (tab.dataset.tab === "pengaturan") {
-              window.app.renderTrashTable();
-            }
+            if (activeContent) activeContent.classList.add("active");
+            if (tab.dataset.tab === "dashboard") window.app.renderDashboard();
+            if (tab.dataset.tab === "pengaturan") window.app.renderTrashTable();
           });
         });
       });
     </script>
-  </body>
+</body>
 </html>
