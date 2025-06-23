@@ -608,29 +608,17 @@
       </div>
 
       <div class="nav-tabs" role="tablist">
-        <button class="nav-tab active" data-tab="dashboard" role="tab">
-          Dashboard
-        </button>
-        <button class="nav-tab" data-tab="penjualan" role="tab">
-          Penjualan
-        </button>
-        <button class="nav-tab" data-tab="pembelian" role="tab">
-          Pembelian
-        </button>
-        <button class="nav-tab" data-tab="suratJalan" role="tab">
-          Surat Jalan
-        </button>
-        <button class="nav-tab" data-tab="pengaturan" role="tab">
-          Pengaturan
-        </button>
-      </div>
+    <button class="nav-tab active" data-tab="dashboard" role="tab">Dashboard</button>
+    <button class="nav-tab" data-tab="penjualan" role="tab">Penjualan</button>
+    <button class="nav-tab" data-tab="pembelian" role="tab">Pembelian</button>
+    <button class="nav-tab" data-tab="pengaturan" role="tab">Pengaturan</button>
+</div>
 
       <div id="notification-area" class="notification"></div>
 
       <div id="dashboard" class="tab-content active" role="tabpanel"></div>
       <div id="penjualan" class="tab-content" role="tabpanel"></div>
       <div id="pembelian" class="tab-content" role="tabpanel"></div>
-      <div id="suratJalan" class="tab-content" role="tabpanel"></div>
 
       <div id="pengaturan" class="tab-content" role="tabpanel">
         <div class="form-section">
@@ -855,18 +843,13 @@
 
         buildDOM() {
           this.cleanup();
-          ["sale", "purchase", "delivery"].forEach((type) => {
-            const containerId =
-              type === "sale"
-                ? "penjualan"
-                : type === "purchase"
-                ? "pembelian"
-                : "suratJalan";
-            const container = document.getElementById(containerId);
-            if (container)
-              container.innerHTML =
-                this.generateFormHTML(type) + this.generateHistoryHTML(type);
-          });
+          ["sale", "purchase"].forEach((type) => {
+    const containerId = type === "sale" ? "penjualan" : "pembelian";
+    const container = document.getElementById(containerId);
+    if (container)
+        container.innerHTML =
+            this.generateFormHTML(type) + this.generateHistoryHTML(type);
+});
 
           const dashboardContainer = document.getElementById("dashboard");
           if (dashboardContainer)
@@ -893,143 +876,123 @@
         }
 
         generateFormHTML(type) {
-          const isTransaction = type === "sale" || type === "purchase";
-          const title =
-            type === "sale"
-              ? "Penjualan"
-              : type === "purchase"
-              ? "Pembelian"
-              : "Surat Jalan";
-          const partyLabel =
-            type === "sale"
-              ? "Customer"
-              : type === "purchase"
-              ? "Pemasok"
-              : "Penerima";
-          const partyType =
-            type === "sale"
-              ? "customer"
-              : type === "purchase"
-              ? "pemasok"
-              : "recipient";
+    const title = type === "sale" ? "Penjualan" : "Pembelian";
+    const partyLabel = type === "sale" ? "Customer" : "Pemasok";
+    const partyType = type === "sale" ? "customer" : "pemasok";
 
-          let formFields = `
-            <div class="form-group">
-                <label for="transNo-${type}">No. Transaksi</label>
-                <input type="text" id="transNo-${type}" readonly value="${this.generateId(type)}">
-            </div>
-            <div class="form-group">
-                <label for="${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}">Tanggal</label>
-                <input type="date" id="${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}" required value="${new Date().toISOString().slice(0, 10)}">
-            </div>
-            <div class="form-group filterable-dropdown">
-                <label for="${partyType}Name-${type}">Nama ${partyLabel}</label>
-                <input type="text" id="${partyType}Name-${type}" required autocomplete="off">
-                <div class="dropdown-options" id="party-dropdown-${type}"></div>
-            </div>
-            <div class="form-group">
-                <label for="${partyType}Address-${type}">Alamat ${partyLabel}</label>
-                <input type="text" id="${partyType}Address-${type}">
-            </div>
-            <div class="form-group">
-                <label for="${partyType}Phone-${type}">Telepon ${partyLabel}</label>
-                <input type="tel" id="${partyType}Phone-${type}" pattern="\\+?[\\d\\s-]{8,}">
-            </div>
-            <div class="form-group">
-                <label for="vehicleNo-${type}">No. Kendaraan</label>
-                <input type="text" id="vehicleNo-${type}">
-            </div>
-      `;
+    let formFields = `
+        <div class="form-group">
+            <label for="transNo-${type}">No. Transaksi</label>
+            <input type="text" id="transNo-${type}" readonly value="${this.generateId(type)}">
+        </div>
+        <div class="form-group">
+            <label for="invoiceDate-${type}">Tanggal</label>
+            <input type="date" id="invoiceDate-${type}" required value="${new Date().toISOString().slice(0, 10)}">
+        </div>
+        <div class="form-group filterable-dropdown">
+            <label for="${partyType}Name-${type}">Nama ${partyLabel}</label>
+            <input type="text" id="${partyType}Name-${type}" required autocomplete="off">
+            <div class="dropdown-options" id="party-dropdown-${type}"></div>
+        </div>
+        <div class="form-group">
+            <label for="${partyType}Address-${type}">Alamat ${partyLabel}</label>
+            <input type="text" id="${partyType}Address-${type}">
+        </div>
+        <div class="form-group">
+            <label for="${partyType}Phone-${type}">Telepon ${partyLabel}</label>
+            <input type="tel" id="${partyType}Phone-${type}" pattern="\\+?[\\d\\s-]{8,}">
+        </div>
+        <div class="form-group">
+            <label for="vehicleNo-${type}">No. Kendaraan</label>
+            <input type="text" id="vehicleNo-${type}">
+        </div>
+        ${type === "sale" ? `<div class="form-group"><label for="ref-${type}">Ref</label><input type="text" id="ref-${type}"></div>` : ""}
+        <div class="form-group">
+            <label for="paymentMethod-${type}">Metode Pembayaran</label>
+            <select id="paymentMethod-${type}">
+                <option value="Transfer">Transfer</option>
+                <option value="Tunai">Tunai</option>
+                <option value="Kredit">Kredit</option>
+            </select>
+        </div>`;
 
-          if (isTransaction) {
-            formFields += `
-                ${type === "sale" ? `<div class="form-group"><label for="ref-${type}">Ref</label><input type="text" id="ref-${type}"></div>` : ""}
+    const itemFields = `
+        <div class="form-section">
+            <h3 class="form-section-title">Tambah Barang</h3>
+            <div class="form-grid">
+                <div class="form-group filterable-dropdown" style="grid-column: 1 / -1;">
+                    <label for="item-selector-${type}">Cari Barang (Nama/Kode)</label>
+                    <input type="text" id="item-selector-${type}" autocomplete="off">
+                    <div class="dropdown-options" id="dropdown-options-${type}"></div>
+                </div>
                 <div class="form-group">
-                    <label for="paymentMethod-${type}">Metode Pembayaran</label>
-                    <select id="paymentMethod-${type}">
-                        <option value="Transfer">Transfer</option>
-                        <option value="Tunai">Tunai</option>
-                        <option value="Kredit">Kredit</option>
-                    </select>
-                </div>`;
-          }
-
-          const itemFields = `
-            <div class="form-section">
-                <h3 class="form-section-title">Tambah Barang</h3>
-                <div class="form-grid">
-                    <div class="form-group filterable-dropdown" style="grid-column: 1 / -1;">
-                        <label for="item-selector-${type}">Cari Barang (Nama/Kode)</label>
-                        <input type="text" id="item-selector-${type}" autocomplete="off">
-                        <div class="dropdown-options" id="dropdown-options-${type}"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="itemCode-${type}">Kode Barang</label>
-                        <input type="text" id="itemCode-${type}" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="itemQty-${type}">Jumlah</label>
-                        <input type="number" id="itemQty-${type}" min="0" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="itemUnit-${type}">Satuan</label>
-                        <input type="text" id="itemUnit-${type}">
-                    </div>
-                    ${isTransaction ? `<div class="form-group"><label for="itemPrice-${type}">Harga Satuan (Rp)</label><input type="text" id="itemPrice-${type}" class="rupiah-input" required></div>` : ""}
-                    <div class="form-group" style="align-self: flex-end;">
-                        <button type="button" id="addItemBtn-${type}" class="btn btn-primary">Tambah Barang</button>
-                    </div>
+                    <label for="itemCode-${type}">Kode Barang</label>
+                    <input type="text" id="itemCode-${type}" readonly>
                 </div>
-            </div>`;
-
-          const tableHeaders = isTransaction
-            ? `<th>No</th><th>Kode</th><th>Nama Barang</th><th class="text-right">Jumlah</th><th>Satuan</th><th class="text-right">Harga Satuan</th><th class="text-right">Total</th><th class="action-cell">Aksi</th>`
-            : `<th>No</th><th>Kode</th><th>Nama Barang</th><th class="text-right">Jumlah</th><th>Satuan</th><th class="action-cell">Aksi</th>`;
-
-          const summarySection = isTransaction
-            ? `<div class="summary-section">
-                <div class="summary-grid">
-                    <label>Subtotal:</label>
-                    <div class="total-amount-display" id="subtotal-${type}">Rp 0</div>
-                    <label for="discount-${type}">Diskon (Rp):</label>
-                    <input type="text" id="discount-${type}" class="rupiah-input" value="0">
-                    <label for="shippingCost-${type}">Ongkos Kirim (Rp):</label>
-                    <input type="text" id="shippingCost-${type}" class="rupiah-input" value="0">
-                    <label>PPN 11%:</label>
-                    <div class="form-group" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="includePpn-${type}" style="width: auto;">
-                        <label for="includePpn-${type}" style="margin-bottom: 0;">Sertakan PPN</label>
-                    </div>
-                    <div></div>
-                    <div class="total-amount-display" id="ppn-${type}">Rp 0</div>
-                    <label>Grand Total:</label>
-                    <div class="total-amount-display" id="grandTotal-${type}">Rp 0</div>
+                <div class="form-group">
+                    <label for="itemQty-${type}">Jumlah</label>
+                    <input type="number" id="itemQty-${type}" min="0" step="0.01" value="0" required>
                 </div>
-            </div>` : "";
+                <div class="form-group">
+                    <label for="itemUnit-${type}">Satuan</label>
+                    <input type="text" id="itemUnit-${type}">
+                </div>
+                <div class="form-group">
+                    <label for="itemPrice-${type}">Harga Satuan (Rp)</label>
+                    <input type="text" id="itemPrice-${type}" class="rupiah-input" value="0" required>
+                </div>
+                <div class="form-group" style="align-self: flex-end;">
+                    <button type="button" id="addItemBtn-${type}" class="btn btn-primary">Tambah Barang</button>
+                </div>
+            </div>
+        </div>`;
 
-          return `<div class="form-section">
-                <h3 class="form-section-title">Form ${title}</h3>
-                <form id="${type}Form">
-                    <div class="form-grid">${formFields}</div>
-                    ${itemFields}
-                    <div class="table-container">
-                        <table class="data-table" id="temp-items-table-${type}">
-                            <thead><tr>${tableHeaders}</tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    ${summarySection}
-                    <div class="form-group" style="grid-column: 1 / -1; margin-top: 20px;">
-                        <label for="notes-${type}">Catatan</label>
-                        <textarea id="notes-${type}" rows="3"></textarea>
-                    </div>
-                    <div class="actions-group">
-                        <button type="submit" class="btn btn-success">Simpan Transaksi</button>
-                        <button type="button" class="btn btn-warning" onclick="app.resetForm('${type}')">Reset Form</button>
-                    </div>
-                </form>
-            </div>`;
-        }
+    const tableHeaders = `<th>No</th><th>Kode</th><th>Nama Barang</th><th class="text-right">Jumlah</th><th>Satuan</th><th class="text-right">Harga Satuan</th><th class="text-right">Total</th><th class="action-cell">Aksi</th>`;
+
+    const summarySection = `
+        <div class="summary-section">
+            <div class="summary-grid">
+                <label>Subtotal:</label>
+                <div class="total-amount-display" id="subtotal-${type}">Rp 0</div>
+                <label for="discount-${type}">Diskon (Rp):</label>
+                <input type="text" id="discount-${type}" class="rupiah-input" value="0">
+                <label for="shippingCost-${type}">Ongkos Kirim (Rp):</label>
+                <input type="text" id="shippingCost-${type}" class="rupiah-input" value="0">
+                <label>PPN 11%:</label>
+                <div class="form-group" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="includePpn-${type}" style="width: auto;">
+                    <label for="includePpn-${type}" style="margin-bottom: 0;">Sertakan PPN</label>
+                </div>
+                <div></div>
+                <div class="total-amount-display" id="ppn-${type}">Rp 0</div>
+                <label>Grand Total:</label>
+                <div class="total-amount-display" id="grandTotal-${type}">Rp 0</div>
+            </div>
+        </div>`;
+
+    return `<div class="form-section">
+            <h3 class="form-section-title">Form ${title}</h3>
+            <form id="${type}Form">
+                <div class="form-grid">${formFields}</div>
+                ${itemFields}
+                <div class="table-container">
+                    <table class="data-table" id="temp-items-table-${type}">
+                        <thead><tr>${tableHeaders}</tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                ${summarySection}
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 20px;">
+                    <label for="notes-${type}">Catatan</label>
+                    <textarea id="notes-${type}" rows="3"></textarea>
+                </div>
+                <div class="actions-group">
+                    <button type="submit" class="btn btn-success">Simpan Transaksi</button>
+                    <button type="button" class="btn btn-warning" onclick="app.resetForm('${type}')">Reset Form</button>
+                </div>
+            </form>
+        </div>`;
+}
 
         bindGlobalEvents() {
             this.cleanup();
@@ -1062,111 +1025,108 @@
                 dashboardFilters.addEventListener("input", Utils.debounce(() => this.renderDashboard(), 300), { signal });
             }
 
-            ["sale", "purchase", "delivery"].forEach((type) => {
-                this.bindFormEvents(type);
-                const historyContainer = document.getElementById(type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan");
-                historyContainer?.addEventListener('click', (e) => {
-                    const target = e.target.closest('button');
-                    if (!target) return;
-
-                    const dataKey = target.getAttribute('data-key');
-                    if (target.id.startsWith('export-excel-btn-')) {
-                        this.exportHistoryToExcel(dataKey);
-                    } else if (target.id.startsWith('export-pdf-btn-')) {
-                        this.exportHistoryToPdf(dataKey);
-                    }
-                });
-            });
+            ["sale", "purchase"].forEach((type) => {
+    this.bindFormEvents(type);
+    const historyContainer = document.getElementById(type === "sale" ? "penjualan" : "pembelian");
+    historyContainer?.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const dataKey = target.getAttribute('data-key');
+        if (target.id.startsWith('export-excel-btn-')) {
+            this.exportHistoryToExcel(dataKey);
+        } else if (target.id.startsWith('export-pdf-btn-')) {
+            this.exportHistoryToPdf(dataKey);
+        }
+    });
+});
         }
         
         bindFormEvents(type) {
-            const controller = new AbortController();
-            this.eventControllers.set(`form-${type}`, controller);
-            const { signal } = controller;
+    const controller = new AbortController();
+    this.eventControllers.set(`form-${type}`, controller);
+    const { signal } = controller;
 
-            const form = document.getElementById(`${type}Form`);
-            if (!form) return;
+    const form = document.getElementById(`${type}Form`);
+    if (!form) return;
 
-            form.addEventListener("submit", (e) => {
-                e.preventDefault();
-                this.saveTransaction(type);
-            }, { signal });
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.saveTransaction(type);
+    }, { signal });
 
-            form.addEventListener("input", Utils.debounce(() => this.saveDraft(type), 1000), { signal });
-            
-            const partyType = type === 'sale' ? 'customer' : type === 'purchase' ? 'pemasok' : 'recipient';
-            const partyInput = form.querySelector(`#${partyType}Name-${type}`);
-            if (partyInput) {
-                partyInput.addEventListener("input", Utils.debounce(() => this.filterPartyNames(type), 300), { signal });
-                partyInput.addEventListener("focus", () => this.filterPartyNames(type, true), { signal });
-                const dropdown = form.querySelector(`#party-dropdown-${type}`);
-                if (dropdown) {
-                    dropdown.addEventListener("click", (e) => {
-                        const option = e.target.closest(".dropdown-option");
-                        if (option) {
-                            partyInput.value = option.textContent;
-                            this.closeAllDropdowns();
-                        }
-                    }, { signal });
-                }
-            }
-
-            const itemSelector = form.querySelector(`#item-selector-${type}`);
-            const dropdownOptions = form.querySelector(`#dropdown-options-${type}`);
-
-            itemSelector?.addEventListener("input", Utils.debounce(() => this.filterDropdown(type), 300), { signal });
-            itemSelector?.addEventListener("focus", () => this.filterDropdown(type, true), { signal });
-            itemSelector?.addEventListener("keydown", (e) => {
-                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                    e.preventDefault();
-                    const options = dropdownOptions.querySelectorAll(".dropdown-option");
-                    if (!options.length) return;
-                    const current = dropdownOptions.querySelector(".dropdown-option.focused");
-                    let index = current ? Array.from(options).indexOf(current) : -1;
-                    if (e.key === "ArrowDown") {
-                        index = (index + 1) % options.length;
-                    } else if (e.key === "ArrowUp") {
-                        index = (index - 1 + options.length) % options.length;
-                    }
-                    options.forEach(o => o.classList.remove("focused"));
-                    if (index >= 0) {
-                        options[index].classList.add("focused");
-                        options[index].scrollIntoView({ block: "nearest" });
-                    }
-                } else if (e.key === "Enter" && dropdownOptions.style.display === "block") {
-                    e.preventDefault();
-                    const focused = dropdownOptions.querySelector(".dropdown-option.focused");
-                    if (focused && focused.dataset.code) {
-                        this.selectItemFromDropdown(focused.dataset.code, type);
-                    }
-                }
-            }, { signal });
-
-            dropdownOptions?.addEventListener("click", (e) => {
+    form.addEventListener("input", Utils.debounce(() => this.saveDraft(type), 1000), { signal });
+    
+    const partyType = type === 'sale' ? 'customer' : 'pemasok';
+    const partyInput = form.querySelector(`#${partyType}Name-${type}`);
+    if (partyInput) {
+        partyInput.addEventListener("input", Utils.debounce(() => this.filterPartyNames(type), 300), { signal });
+        partyInput.addEventListener("focus", () => this.filterPartyNames(type, true), { signal });
+        const dropdown = form.querySelector(`#party-dropdown-${type}`);
+        if (dropdown) {
+            dropdown.addEventListener("click", (e) => {
                 const option = e.target.closest(".dropdown-option");
-                if (option && option.dataset.code) {
-                    this.selectItemFromDropdown(option.dataset.code, type);
+                if (option) {
+                    partyInput.value = option.textContent;
+                    this.closeAllDropdowns();
                 }
             }, { signal });
+        }
+    }
 
-            form.querySelector(`#addItemBtn-${type}`)?.addEventListener("click", () => this.addItemToTempList(type), { signal });
-            form.querySelector(`#temp-items-table-${type}`)?.addEventListener("click", (e) => {
-                if (e.target.classList.contains("delete-temp-item-btn")) {
-                    this.deleteItemFromTempList(parseInt(e.target.dataset.id, 10), type);
-                }
-            }, { signal });
+    const itemSelector = form.querySelector(`#item-selector-${type}`);
+    const dropdownOptions = form.querySelector(`#dropdown-options-${type}`);
 
-            if (type !== "delivery") {
-                ["itemPrice", "shippingCost", "discount"].forEach((id) => {
-                    const input = form.querySelector(`#${id}-${type}`);
-                    if (input) {
-                        input.addEventListener("input", (e) => Utils.formatRupiahInput(e.target), { signal });
-                        input.addEventListener("blur", () => this.calculateTotals(type), { signal });
-                    }
-                });
-                form.querySelector(`#includePpn-${type}`)?.addEventListener("change", () => this.calculateTotals(type), { signal });
+    itemSelector?.addEventListener("input", Utils.debounce(() => this.filterDropdown(type), 300), { signal });
+    itemSelector?.addEventListener("focus", () => this.filterDropdown(type, true), { signal });
+    itemSelector?.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const options = dropdownOptions.querySelectorAll(".dropdown-option");
+            if (!options.length) return;
+            const current = dropdownOptions.querySelector(".dropdown-option.focused");
+            let index = current ? Array.from(options).indexOf(current) : -1;
+            if (e.key === "ArrowDown") {
+                index = (index + 1) % options.length;
+            } else if (e.key === "ArrowUp") {
+                index = (index - 1 + options.length) % options.length;
+            }
+            options.forEach(o => o.classList.remove("focused"));
+            if (index >= 0) {
+                options[index].classList.add("focused");
+                options[index].scrollIntoView({ block: "nearest" });
+            }
+        } else if (e.key === "Enter" && dropdownOptions.style.display === "block") {
+            e.preventDefault();
+            const focused = dropdownOptions.querySelector(".dropdown-option.focused");
+            if (focused && focused.dataset.code) {
+                this.selectItemFromDropdown(focused.dataset.code, type);
             }
         }
+    }, { signal });
+
+    dropdownOptions?.addEventListener("click", (e) => {
+        const option = e.target.closest(".dropdown-option");
+        if (option && option.dataset.code) {
+            this.selectItemFromDropdown(option.dataset.code, type);
+        }
+    }, { signal });
+
+    form.querySelector(`#addItemBtn-${type}`)?.addEventListener("click", () => this.addItemToTempList(type), { signal });
+    form.querySelector(`#temp-items-table-${type}`)?.addEventListener("click", (e) => {
+        if (e.target.classList.contains("delete-temp-item-btn")) {
+            this.deleteItemFromTempList(parseInt(e.target.dataset.id, 10), type);
+        }
+    }, { signal });
+
+    ["itemPrice", "shippingCost", "discount"].forEach((id) => {
+        const input = form.querySelector(`#${id}-${type}`);
+        if (input) {
+            input.addEventListener("input", (e) => Utils.formatRupiahInput(e.target), { signal });
+            input.addEventListener("blur", () => this.calculateTotals(type), { signal });
+        }
+    });
+    form.querySelector(`#includePpn-${type}`)?.addEventListener("change", () => this.calculateTotals(type), { signal });
+}
 
         selectItemFromDropdown(code, type) {
             const form = document.getElementById(`${type}Form`);
@@ -1206,53 +1166,53 @@
         }
 
         addItemToTempList(type) {
-            const form = document.getElementById(`${type}Form`);
-            if (!form) return;
+    const form = document.getElementById(`${type}Form`);
+    if (!form) return;
 
-            const itemCode = form.querySelector(`#itemCode-${type}`).value;
-            const qty = parseFloat(form.querySelector(`#itemQty-${type}`).value) || 0;
-            const price =
-                type !== "delivery"
-                    ? parseInt(
-                        form
-                            .querySelector(`#itemPrice-${type}`)
-                            .value.replace(/[^0-9]/g, ""),
-                        10
-                    ) || 0
-                    : 0;
-            const unit = form.querySelector(`#itemUnit-${type}`).value;
+    const itemCode = form.querySelector(`#itemCode-${type}`).value;
+    const qty = parseFloat(form.querySelector(`#itemQty-${type}`).value) || 0;
+    const price =
+        type !== "delivery"
+            ? parseInt(
+                form
+                    .querySelector(`#itemPrice-${type}`)
+                    .value.replace(/[^0-9]/g, ""),
+                10
+            ) || 0
+            : 0;
+    const unit = form.querySelector(`#itemUnit-${type}`).value;
 
-            const item = this.data.masterItems.find((i) => i.code === itemCode);
-            if (!item) {
-                this.showNotification("Kode barang tidak ditemukan.", false);
-                return;
-            }
+    const item = this.data.masterItems.find((i) => i.code === itemCode);
+    if (!item) {
+        this.showNotification("Kode barang tidak ditemukan.", false);
+        return;
+    }
 
-            if (qty <= 0) {
-                this.showNotification("Jumlah barang harus lebih dari 0.", false);
-                return;
-            }
+    if (qty <= 0 && type !== "delivery") {
+        this.showNotification("Jumlah barang harus lebih dari 0.", false);
+        return;
+    }
 
-            const newItem = {
-                id: Date.now(),
-                code: itemCode,
-                name: item.name,
-                qty,
-                unit: unit || item.unit || "-",
-                price,
-                total: type !== "delivery" ? qty * price : 0,
-            };
+    const newItem = {
+        id: Date.now(),
+        code: itemCode,
+        name: item.name,
+        qty,
+        unit: unit || item.unit || "-",
+        price: type !== "delivery" ? price : 0, // Pastikan harga 0 untuk Surat Jalan
+        total: type !== "delivery" ? qty * price : 0, // Pastikan total 0 untuk Surat Jalan
+    };
 
-            this.tempItems[type].push(newItem);
-            this.renderTempItemsTable(type);
-            form.querySelector(`#item-selector-${type}`).value = "";
-            form.querySelector(`#itemCode-${type}`).value = "";
-            form.querySelector(`#itemQty-${type}`).value = "";
-            if (type !== "delivery")
-                form.querySelector(`#itemPrice-${type}`).value = "";
-            form.querySelector(`#itemUnit-${type}`).value = "";
-            form.querySelector(`#item-selector-${type}`).focus();
-        }
+    this.tempItems[type].push(newItem);
+    this.renderTempItemsTable(type);
+    form.querySelector(`#item-selector-${type}`).value = "";
+    form.querySelector(`#itemCode-${type}`).value = "";
+    form.querySelector(`#itemQty-${type}`).value = "0"; // Reset ke 0
+    if (type !== "delivery")
+        form.querySelector(`#itemPrice-${type}`).value = "0"; // Reset ke 0
+    form.querySelector(`#itemUnit-${type}`).value = "";
+    form.querySelector(`#item-selector-${type}`).focus();
+}
 
         filterPartyNames(type, showAll = false) {
             const partyType = type === "sale" ? "customer" : type === "purchase" ? "pemasok" : "recipient";
@@ -1275,65 +1235,62 @@
         }
         
         loadData() {
-            const defaultData = {
-                penjualan: [],
-                pembelian: [],
-                suratJalan: [],
-                masterItems: [],
-                config: {
-                    noPenjualan: 1,
-                    noPembelian: 1,
-                    noSuratJalan: 1,
-                    namaPerusahaan: "PT. SUMBER GANDA MEKAR",
-                    alamatPerusahaan: "Jl. Raya Gedebage No. 95 Bandung",
-                    kontak: "CP. Irwan : 082117800626, CP. Uwem : 082318188863",
-                    rekening: "BANK BCA No. Rek. 2801011286 a.n Maman Suherman",
-                    tagline: "JUAL BELI BESI TUA/BARU - RANGKA BETON/LOGAM - TIANG LISTRIK/TELP DAN KONSTRUKSI BAJA",
-                    logoUrl: "logo.png",
-                },
-                partyNames: { customer: [], pemasok: [], recipient: [] },
-            };
+    const defaultData = {
+        penjualan: [],
+        pembelian: [],
+        masterItems: [],
+        config: {
+            noPenjualan: 1,
+            noPembelian: 1,
+            namaPerusahaan: "PT. SUMBER GANDA MEKAR",
+            alamatPerusahaan: "Jl. Raya Gedebage No. 95 Bandung",
+            kontak: "CP. Irwan : 082117800626, CP. Uwem : 082318188863",
+            rekening: "BANK BCA No. Rek. 2801011286 a.n Maman Suherman",
+            tagline: "JUAL BELI BESI TUA/BARU - RANGKA BETON/LOGAM - TIANG LISTRIK/TELP DAN KONSTRUKSI BAJA",
+            logoUrl: "logo.png",
+        },
+        partyNames: { customer: [], pemasok: [] },
+    };
 
-            return new Promise((resolve, reject) => {
-                try {
-                    const dataFromStorage = localStorage.getItem(this.STORAGE_KEY);
-                    if (dataFromStorage) {
-                        const parsedData = JSON.parse(dataFromStorage);
-                        this.data = {
-                            ...defaultData,
-                            ...parsedData,
-                            config: { ...defaultData.config, ...(parsedData.config || {}) },
-                            partyNames: parsedData.partyNames || defaultData.partyNames,
-                        };
-                    } else {
-                        this.data = defaultData;
-                    }
+    return new Promise((resolve, reject) => {
+        try {
+            const dataFromStorage = localStorage.getItem(this.STORAGE_KEY);
+            if (dataFromStorage) {
+                const parsedData = JSON.parse(dataFromStorage);
+                this.data = {
+                    ...defaultData,
+                    ...parsedData,
+                    config: { ...defaultData.config, ...(parsedData.config || {}) },
+                    partyNames: parsedData.partyNames || defaultData.partyNames,
+                };
+            } else {
+                this.data = defaultData;
+            }
 
-                    this.partyNames.customer = new Set(this.data.partyNames.customer || []);
-                    this.partyNames.pemasok = new Set(this.data.partyNames.pemasok || []);
-                    this.partyNames.recipient = new Set(this.data.partyNames.recipient || []);
+            this.partyNames.customer = new Set(this.data.partyNames.customer || []);
+            this.partyNames.pemasok = new Set(this.data.partyNames.pemasok || []);
 
-                    const trashData = localStorage.getItem(this.TRASH_KEY);
-                    if (trashData) {
-                        this.trash = JSON.parse(trashData);
-                        const cutoff = new Date();
-                        cutoff.setDate(cutoff.getDate() - 30);
-                        this.trash = this.trash.filter(item => new Date(item.deletedAt) >= cutoff);
-                        localStorage.setItem(this.TRASH_KEY, JSON.stringify(this.trash));
-                    } else {
-                        this.trash = [];
-                    }
+            const trashData = localStorage.getItem(this.TRASH_KEY);
+            if (trashData) {
+                this.trash = JSON.parse(trashData);
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 30);
+                this.trash = this.trash.filter(item => new Date(item.deletedAt) >= cutoff);
+                localStorage.setItem(this.TRASH_KEY, JSON.stringify(this.trash));
+            } else {
+                this.trash = [];
+            }
 
-                    this.buildItemIndex();
-                    resolve();
-                } catch (e) {
-                    this.data = defaultData;
-                    this.trash = [];
-                    this.buildItemIndex();
-                    reject(e);
-                }
-            });
+            this.buildItemIndex();
+            resolve();
+        } catch (e) {
+            this.data = defaultData;
+            this.trash = [];
+            this.buildItemIndex();
+            reject(e);
         }
+    });
+}
         
         buildItemIndex() {
             this.itemIndex.clear();
@@ -1706,94 +1663,94 @@
         }
 
         generateId(type) {
-            let num, prefix, configKey;
-            const date = new Date();
-            const year = date.getFullYear().toString().slice(-2);
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    let num, prefix, configKey;
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2); // Ambil 2 digit terakhir tahun
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Bulan dengan 2 digit
 
-            switch (type) {
-                case "sale": num = this.data.config.noPenjualan; prefix = "PJ"; configKey = "noPenjualan"; break;
-                case "purchase": num = this.data.config.noPembelian; prefix = "PB"; configKey = "noPembelian"; break;
-                case "delivery": num = this.data.config.noSuratJalan; prefix = "SJ"; configKey = "noSuratJalan"; break;
-            }
-            const id = `${prefix}${year}${month}-${String(num).padStart(4, "0")}`;
-            const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
-            
-            if (this.data[dataKey].some(t => t.id === id)) {
-                this.data.config[configKey]++;
-                return this.generateId(type);
-            }
-            return id;
-        }
+    switch (type) {
+        case "sale":
+            num = this.data.config.noPenjualan;
+            prefix = "SGM.PJ";
+            configKey = "noPenjualan";
+            break;
+        case "purchase":
+            num = this.data.config.noPembelian;
+            prefix = "SGM.PB";
+            configKey = "noPembelian";
+            break;
+        default:
+            return "";
+    }
+
+    const id = `${String(num).padStart(3, "0")}.${prefix}.${year}${month}`; // Format: NNN.SGM.TT.YYMM
+    const dataKey = type === "sale" ? "penjualan" : "pembelian";
+
+    if (this.data[dataKey].some(t => t.id === id)) {
+        this.data.config[configKey]++;
+        return this.generateId(type); // Rekursif jika ID sudah ada
+    }
+    return id;
+}
 
         async saveTransaction(type) {
-            try {
-                this.showLoading(true);
-                const form = document.getElementById(`${type}Form`);
-                const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : "suratJalan";
-                const tempItems = this.tempItems[type];
+    try {
+        this.showLoading(true);
+        const form = document.getElementById(`${type}Form`);
+        const dataKey = type === "sale" ? "penjualan" : "pembelian";
+        const tempItems = this.tempItems[type];
 
-                if (tempItems.length === 0) throw new Error("Tambahkan minimal satu barang.");
-                for (const field of form.querySelectorAll("[required], [pattern]")) {
-                    const label = field.labels?.[0]?.textContent || field.name;
-                    if (!Utils.validateInput(field.value, "required")) { field.focus(); throw new Error(`Field '${label}' harus diisi.`); }
-                    if (field.pattern && !new RegExp(field.pattern).test(field.value)) { field.focus(); throw new Error(`Isian untuk '${label}' tidak valid.`); }
-                }
-
-                const partyType = type === "sale" ? "customer" : type === "purchase" ? "pemasok" : "recipient";
-                const phoneInput = form.querySelector(`#${partyType}Phone-${type}`);
-                if (phoneInput && phoneInput.value && !Utils.validateInput(phoneInput.value, "phone")) { phoneInput.focus(); throw new Error("Nomor telepon tidak valid."); }
-
-                const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
-                if (partyName) this.partyNames[partyType].add(partyName);
-
-                const newId = this.generateId(type);
-                const isTransaction = type === "sale" || type === "purchase";
-                const newTrans = {
-                    id: newId,
-                    tanggal: form.querySelector(`#${isTransaction ? "invoiceDate" : "deliveryDate"}-${type}`).value,
-                    notes: this.sanitizeInput(form.querySelector(`#notes-${type}`).value),
-                    items: [...tempItems],
-                };
-
-                if (isTransaction) {
-                    const totals = this.calculateTotals(type);
-                    Object.assign(newTrans, {
-                        ...totals,
-                        [type === "sale" ? "customer" : "pemasok"]: partyName,
-                        alamat: this.sanitizeInput(form.querySelector(`#${partyType}Address-${type}`).value),
-                        telepon: this.sanitizeInput(form.querySelector(`#${partyType}Phone-${type}`).value),
-                        noKendaraan: this.sanitizeInput(form.querySelector(`#vehicleNo-${type}`)?.value),
-                        metodePembayaran: form.querySelector(`#paymentMethod-${type}`).value,
-                    });
-                    if (type === "sale") {
-                        newTrans.ref = this.sanitizeInput(form.querySelector(`#ref-${type}`).value);
-                        this.data.config.noPenjualan++;
-                    } else {
-                        this.data.config.noPembelian++;
-                    }
-                } else {
-                    Object.assign(newTrans, {
-                        penerima: partyName,
-                        alamat: this.sanitizeInput(form.querySelector(`#recipientAddress-${type}`).value),
-                        telepon: this.sanitizeInput(form.querySelector(`#recipientPhone-${type}`).value),
-                        noKendaraan: this.sanitizeInput(form.querySelector(`#vehicleNo-${type}`).value),
-                    });
-                    this.data.config.noSuratJalan++;
-                }
-
-                this.data[dataKey].unshift(newTrans);
-                this.saveData();
-                this.resetForm(type);
-                await this.updateAllUI();
-                this.showNotification(`Transaksi ${newTrans.id} berhasil disimpan.`);
-            } catch (error) {
-                Utils.logError("Transaction save failed", error);
-                this.showNotification(`Gagal: ${error.message}`, false);
-            } finally {
-                this.showLoading(false);
-            }
+        if (tempItems.length === 0) throw new Error("Tambahkan minimal satu barang.");
+        for (const field of form.querySelectorAll("[required], [pattern]")) {
+            const label = field.labels?.[0]?.textContent || field.name;
+            if (!Utils.validateInput(field.value, "required")) { field.focus(); throw new Error(`Field '${label}' harus diisi.`); }
+            if (field.pattern && !new RegExp(field.pattern).test(field.value)) { field.focus(); throw new Error(`Isian untuk '${label}' tidak valid.`); }
         }
+
+        const partyType = type === "sale" ? "customer" : "pemasok";
+        const phoneInput = form.querySelector(`#${partyType}Phone-${type}`);
+        if (phoneInput && phoneInput.value && !Utils.validateInput(phoneInput.value, "phone")) { phoneInput.focus(); throw new Error("Nomor telepon tidak valid."); }
+
+        const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
+        if (partyName) this.partyNames[partyType].add(partyName);
+
+        const newId = this.generateId(type);
+        const newTrans = {
+            id: newId,
+            tanggal: form.querySelector(`#invoiceDate-${type}`).value,
+            notes: this.sanitizeInput(form.querySelector(`#notes-${type}`).value),
+            items: [...tempItems],
+        };
+
+        const totals = this.calculateTotals(type);
+        Object.assign(newTrans, {
+            ...totals,
+            [type === "sale" ? "customer" : "pemasok"]: partyName,
+            alamat: this.sanitizeInput(form.querySelector(`#${partyType}Address-${type}`).value),
+            telepon: this.sanitizeInput(form.querySelector(`#${partyType}Phone-${type}`).value),
+            noKendaraan: this.sanitizeInput(form.querySelector(`#vehicleNo-${type}`)?.value),
+            metodePembayaran: form.querySelector(`#paymentMethod-${type}`).value,
+        });
+
+        if (type === "sale") {
+            newTrans.ref = this.sanitizeInput(form.querySelector(`#ref-${type}`).value);
+            this.data.config.noPenjualan++;
+        } else {
+            this.data.config.noPembelian++;
+        }
+
+        this.data[dataKey].unshift(newTrans);
+        this.saveData();
+        this.resetForm(type);
+        await this.updateAllUI();
+        this.showNotification(`Transaksi ${newTrans.id} berhasil disimpan.`);
+    } catch (error) {
+        Utils.logError("Transaction save failed", error);
+        this.showNotification(`Gagal: ${error.message}`, false);
+    } finally {
+        this.showLoading(false);
+    }
+}
 
         resetForm(type) {
             const form = document.getElementById(`${type}Form`);
@@ -1926,47 +1883,56 @@
         }
 
         exportHistoryToPdf(dataKey) {
-            this.showLoading(true);
-            const transactions = this._getFilteredHistoryData(dataKey);
-            if (transactions.length === 0) {
-                this.showNotification("Tidak ada data untuk diekspor.", false);
-                this.showLoading(false);
-                return;
-            }
+    this.showLoading(true);
+    const transactions = this._getFilteredHistoryData(dataKey);
+    if (transactions.length === 0) {
+        this.showNotification("Tidak ada data untuk diekspor.", false);
+        this.showLoading(false);
+        return;
+    }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' });
-            
-            const head = [['ID', 'Tanggal', 'Partner', 'No. Kend', 'Item', 'Qty', 'Harga', 'Total']];
-            const body = [];
-            transactions.forEach(t => {
-                t.items.forEach(item => {
-                    body.push([
-                        t.id, t.tanggal, t.customer || t.pemasok || t.penerima || '', t.noKendaraan || '-',
-                        item.name, this.formatNumber(item.qty), this.formatCurrency(item.price, false), this.formatCurrency(item.total, false)
-                    ]);
-                });
-            });
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    
+    // Tambahkan semua kolom yang diinginkan, termasuk Jumlah dan Harga Satuan
+    const head = [['ID', 'Tanggal', 'Partner', 'No. Kend', 'Kode Barang', 'Nama Barang', 'Jumlah', 'Satuan', 'Harga Satuan', 'Total']];
+    const body = [];
+    transactions.forEach(t => {
+        t.items.forEach(item => {
+            body.push([
+                t.id,
+                t.tanggal,
+                t.customer || t.pemasok || t.penerima || '',
+                t.noKendaraan || '-',
+                item.code || '-',
+                item.name || '-',
+                this.formatNumber(item.qty || 0), // Pastikan Jumlah selalu muncul, default 0
+                item.unit || '-',
+                this.formatCurrency(item.price || 0, false), // Pastikan Harga Satuan selalu muncul, default 0
+                this.formatCurrency(item.total || 0, false)
+            ]);
+        });
+    });
 
-            doc.autoTable({
-                head: head,
-                body: body,
-                startY: 25,
-                headStyles: { fillColor: [0, 48, 135] },
-                didDrawPage: (data) => {
-                    doc.setFontSize(16);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`Laporan ${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)}`, data.settings.margin.left, 15);
-                    const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-                    doc.setFontSize(10);
-                    doc.text(`Dicetak pada: ${today}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, 15, { align: 'right' });
-                },
-            });
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 25,
+        headStyles: { fillColor: [0, 48, 135] },
+        didDrawPage: (data) => {
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Laporan ${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)}`, data.settings.margin.left, 15);
+            const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            doc.setFontSize(10);
+            doc.text(`Dicetak pada: ${today}`, doc.internal.pageSize.getWidth() - data.settings.margin.right, 15, { align: 'right' });
+        },
+    });
 
-            doc.save(`Laporan_${dataKey}_${new Date().toISOString().slice(0, 10)}.pdf`);
-            this.showLoading(false);
-            this.showNotification("Riwayat transaksi berhasil diekspor ke PDF.");
-        }
+    doc.save(`Laporan_${dataKey}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    this.showLoading(false);
+    this.showNotification("Riwayat transaksi berhasil diekspor ke PDF.");
+}
         
         generateDashboardHTML() {
             return `<div class="form-section">
