@@ -1040,58 +1040,67 @@
         }
         
         bindGlobalEvents() {
-            this.cleanup();
-            const globalController = new AbortController();
-            this.eventControllers.set("global", globalController);
-            const { signal } = globalController;
-    
-            document.addEventListener("click", (e) => {
-                if (!e.target.closest(".filterable-dropdown")) {
-                    this.closeAllDropdowns();
-                }
-            }, { signal });
-    
-            document.getElementById("saveConfigBtn")?.addEventListener("click", () => this.saveConfig(), { signal });
-            document.getElementById("saveMasterItemsBtn")?.addEventListener("click", () => this.saveMasterItemsFromTextarea(), { signal });
-            document.getElementById("clearMasterItemsBtn")?.addEventListener("click", () => this.clearMasterItems(), { signal });
-            document.getElementById("backupDataBtn")?.addEventListener("click", () => this.backupData(), { signal });
-            document.getElementById("restoreDataBtn")?.addEventListener("click", () => document.getElementById("restoreFileInput")?.click(), { signal });
-            document.getElementById("restoreFileInput")?.addEventListener("change", (e) => this.restoreData(e), { signal });
-            document.getElementById("exportCsvBtn")?.addEventListener("click", () => this.exportMasterItemsToCsv(), { signal });
-            document.getElementById("importCsvBtn")?.addEventListener("click", () => document.getElementById("csvFileInput")?.click(), { signal });
-            document.getElementById("csvFileInput")?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), { signal });
-            document.getElementById("add-master-item-form-element")?.addEventListener("submit", (e) => {
-                e.preventDefault();
-                this.addNewMasterItem();
-            }, { signal });
-    
-            const dashboardFilters = document.getElementById("dashboard-filters");
-            if (dashboardFilters) {
-                dashboardFilters.addEventListener("input", Utils.debounce(() => this.renderDashboard(), 300), { signal });
-            }
-    
-            // Bind events for forms and history sections
-            ["sale", "purchase"].forEach((type) => {
-                this.bindFormEvents(type);
-            });
-            ["sale", "purchase", "invoice", "suratJalan"].forEach(type => {
-                const dataKey = type === "sale" ? "penjualan" : type === "purchase" ? "pembelian" : type;
-                const container = document.getElementById(dataKey);
-                container?.addEventListener('click', (e) => {
-                    const target = e.target.closest('button');
-                    if (!target) return;
-    
-                    const key = target.getAttribute('data-key');
-                    if (target.id.startsWith('export-excel-btn-')) this.exportHistoryToExcel(key);
-                    else if (target.id.startsWith('export-pdf-btn-')) this.exportHistoryToPdf(key);
-                });
-    
-                const filters = document.getElementById(`history-filters-${type}`);
-                if (filters) {
-                    filters.addEventListener("input", Utils.debounce(() => this.renderHistoryTable(dataKey, `${type}-history-table`), 300));
-                }
-            });
-        }
+            this.cleanup();
+            const globalController = new AbortController();
+            this.eventControllers.set("global", globalController);
+            const { signal } = globalController;
+
+            // Listener umum untuk menutup dropdown
+            document.addEventListener("click", (e) => {
+                if (!e.target.closest(".filterable-dropdown")) {
+                    this.closeAllDropdowns();
+                }
+            }, { signal });
+
+            // Listener untuk semua tombol di tab Pengaturan
+            document.getElementById("saveConfigBtn")?.addEventListener("click", () => this.saveConfig(), { signal });
+            document.getElementById("saveMasterItemsBtn")?.addEventListener("click", () => this.saveMasterItemsFromTextarea(), { signal });
+            document.getElementById("clearMasterItemsBtn")?.addEventListener("click", () => this.clearMasterItems(), { signal });
+            document.getElementById("backupDataBtn")?.addEventListener("click", () => this.backupData(), { signal });
+            document.getElementById("restoreDataBtn")?.addEventListener("click", () => document.getElementById("restoreFileInput")?.click(), { signal });
+            document.getElementById("restoreFileInput")?.addEventListener("change", (e) => this.restoreData(e), { signal });
+            document.getElementById("exportCsvBtn")?.addEventListener("click", () => this.exportMasterItemsToCsv(), { signal });
+            document.getElementById("importCsvBtn")?.addEventListener("click", () => document.getElementById("csvFileInput")?.click(), { signal });
+            document.getElementById("csvFileInput")?.addEventListener("change", (e) => this.importMasterItemsFromCsv(e), { signal });
+            document.getElementById("add-master-item-form-element")?.addEventListener("submit", (e) => {
+                e.preventDefault();
+                this.addNewMasterItem();
+            }, { signal });
+
+            // Listener untuk filter di Dashboard
+            const dashboardFilters = document.getElementById("dashboard-filters");
+            if (dashboardFilters) {
+                dashboardFilters.addEventListener("input", Utils.debounce(() => this.renderDashboard(), 300), { signal });
+            }
+
+            // Listener untuk semua form (Penjualan & Pembelian)
+            ["sale", "purchase"].forEach((type) => {
+                this.bindFormEvents(type);
+            });
+
+            // === PERBAIKAN UTAMA DI SINI ===
+            // Satu event listener untuk menangani semua tombol ekspor dan filter riwayat
+            document.querySelector('.container').addEventListener('input', (e) => {
+                if (e.target.closest('.history-filters')) {
+                    const historyFilters = e.target.closest('.history-filters');
+                    const type = historyFilters.id.replace('history-filters-', ''); // e.g., 'sale', 'invoice'
+                    const dataKey = type === 'sale' ? 'penjualan' : type === 'purchase' ? 'pembelian' : type;
+                    Utils.debounce(() => this.renderHistoryTable(dataKey, `${type}-history-table`), 300)();
+                }
+            });
+
+            document.querySelector('.container').addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-key]');
+                if (!button) return;
+
+                const dataKey = button.getAttribute('data-key');
+                if (button.id.startsWith('export-excel-btn-')) {
+                    this.exportHistoryToExcel(dataKey);
+                } else if (button.id.startsWith('export-pdf-btn-')) {
+                    this.exportHistoryToPdf(dataKey);
+                }
+            });
+        }
 
         bindFormEvents(type) {
             const controller = new AbortController();
@@ -1485,6 +1494,7 @@
                 this.data.partyNames.customer = [...this.partyNames.customer].sort();
                 this.data.partyNames.pemasok = [...this.partyNames.pemasok].sort();
                 this.data.partyNames.recipient = [...this.partyNames.recipient].sort();
+                console.log('Saving data to localStorage:', this.data); // Debugging
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
             } catch (error) {
                 Utils.logError("Failed to save data", error);
@@ -1776,30 +1786,26 @@
         }
 
         async saveTransaction(type) {
-            try {
-                this.showLoading(true);
-                const form = document.getElementById(`${type}Form`);
-                const tempItems = this.tempItems[type];
-
-                if (tempItems.length === 0) throw new Error("Tambahkan minimal satu barang.");
-                for (const field of form.querySelectorAll("[required]")) {
-                    const label = field.labels?.[0]?.textContent || field.name;
-                    if (!Utils.validateInput(field.value, "required")) {
-                        field.focus();
-                        throw new Error(`Field '${label}' harus diisi.`);
-                    }
-                }
-
-                const partyType = type === "sale" ? "customer" : "pemasok";
-                const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
-                if (partyName) this.partyNames[partyType].add(partyName);
-
-                const isTransaction = type === "sale" || type === "purchase";
-                const includePpn = isTransaction && form.querySelector(`#includePpn-${type}`)?.checked;
-                
-                // Determine where to save the data
-                const dataKey = includePpn ? "invoices" : (type === "sale" ? "penjualan" : "pembelian");
-                const idType = includePpn ? "invoice" : type;
+    try {
+        this.showLoading(true);
+        const form = document.getElementById(`${type}Form`);
+        const tempItems = this.tempItems[type];
+        if (tempItems.length === 0) throw new Error("Tambahkan minimal satu barang.");
+        for (const field of form.querySelectorAll("[required]")) {
+            const label = field.labels?.[0]?.textContent || field.name;
+            if (!Utils.validateInput(field.value, "required")) {
+                field.focus();
+                throw new Error(`Field '${label}' harus diisi.`);
+            }
+        }
+        const partyType = type === "sale" ? "customer" : "pemasok";
+        const partyName = this.sanitizeInput(form.querySelector(`#${partyType}Name-${type}`).value.trim());
+        if (partyName) this.partyNames[partyType].add(partyName);
+        const isTransaction = type === "sale" || type === "purchase";
+        const includePpn = isTransaction && form.querySelector(`#includePpn-${type}`)?.checked;
+        const dataKey = includePpn ? "invoices" : (type === "sale" ? "penjualan" : "pembelian");
+        const idType = includePpn ? "invoice" : type;
+        console.log(`Saving transaction to ${dataKey}, type: ${type}, includePpn: ${includePpn}`); // Debugging
 
                 const newId = this.generateId(idType, includePpn ? type : null);
                 const totals = this.calculateTotals(type);
@@ -1837,11 +1843,11 @@
                 await this.updateAllUI();
                 this.showNotification(`Transaksi ${newTrans.id} berhasil disimpan di ${dataKey}.`);
             } catch (error) {
-                Utils.logError("Transaction save failed", error);
-                this.showNotification(`Gagal: ${error.message}`, false);
-            } finally {
-                this.showLoading(false);
-            }
+        Utils.logError("Transaction save failed", error);
+        this.showNotification(`Gagal: ${error.message}`, false);
+    } finally {
+        this.showLoading(false);
+    }
         }
 
         resetForm(type) {
@@ -1952,13 +1958,15 @@
         }
         
         exportHistoryToExcel(dataKey) {
-            this.showLoading(true);
-            const transactions = this._getFilteredHistoryData(dataKey);
-            if (transactions.length === 0) {
-                this.showNotification("Tidak ada data untuk diekspor.", false);
-                this.showLoading(false);
-                return;
-            }
+            console.log(`Exporting Excel for dataKey: ${dataKey}, data:`, this.data[dataKey]);
+    this.showLoading(true);
+    const transactions = this._getFilteredHistoryData(dataKey);
+    console.log('Filtered transactions:', transactions);
+    if (transactions.length === 0) {
+        this.showNotification("Tidak ada data untuk diekspor.", false);
+        this.showLoading(false);
+        return;
+    }
 
             const flattenedData = [];
             transactions.forEach(t => {
@@ -1988,13 +1996,15 @@
         }
 
         exportHistoryToPdf(dataKey) {
-            this.showLoading(true);
-            const transactions = this._getFilteredHistoryData(dataKey);
-            if (transactions.length === 0) {
-                this.showNotification("Tidak ada data untuk diekspor.", false);
-                this.showLoading(false);
-                return;
-            }
+            console.log(`Exporting PDF for dataKey: ${dataKey}, data:`, this.data[dataKey]);
+    this.showLoading(true);
+    const transactions = this._getFilteredHistoryData(dataKey);
+    console.log('Filtered transactions:', transactions);
+    if (transactions.length === 0) {
+        this.showNotification("Tidak ada data untuk diekspor.", false);
+        this.showLoading(false);
+        return;
+    }
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' });
@@ -2187,18 +2197,18 @@
         }
         
         async renderDashboard() {
-            const statsContainer = document.getElementById("dashboard-stats");
-            const tableBody = document.querySelector("#dashboard-transactions-table tbody");
-            if (!statsContainer || !tableBody) return;
-
-            const filters = document.getElementById("dashboard-filters");
-            const startDate = filters.querySelector(".start-date")?.value;
-            const endDate = filters.querySelector(".end-date")?.value;
-            const filterPredicate = t => (!startDate || t.tanggal >= startDate) && (!endDate || t.tanggal <= endDate);
-
-            // Correctly calculate total sales and purchases from all relevant arrays
-            const allSales = [...this.data.penjualan, ...this.data.invoices.filter(inv => inv.transType === 'sale')];
-            const allPurchases = [...this.data.pembelian, ...this.data.invoices.filter(inv => inv.transType === 'purchase')];
+            console.log('Invoices data:', this.data.invoices); // Debugging
+    const statsContainer = document.getElementById("dashboard-stats");
+    const tableBody = document.querySelector("#dashboard-transactions-table tbody");
+    if (!statsContainer || !tableBody) return;
+    const filters = document.getElementById("dashboard-filters");
+    const startDate = filters.querySelector(".start-date")?.value;
+    const endDate = filters.querySelector(".end-date")?.value;
+    const filterPredicate = t => (!startDate || t.tanggal >= startDate) && (!endDate || t.tanggal <= endDate);
+    const allSales = [...this.data.penjualan, ...this.data.invoices.filter(inv => inv.transType === 'sale')];
+    const allPurchases = [...this.data.pembelian, ...this.data.invoices.filter(inv => inv.transType === 'purchase')];
+    console.log('All Sales:', allSales); // Debugging
+    console.log('All Purchases:', allPurchases); // Debugging
 
             const filteredSales = allSales.filter(filterPredicate);
             const filteredPurchases = allPurchases.filter(filterPredicate);
