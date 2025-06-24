@@ -883,7 +883,6 @@
     }
     
     .data-table thead {
-        /* Untuk mobile, terkadang lebih baik tidak men-sticky header jika lebar tabel sangat besar */
         position: relative;
     }
     
@@ -900,14 +899,16 @@
         gap: 4px;
     }
 
+    /* === PERBAIKAN UTAMA DI SINI === */
     .print-signatures {
-        flex-direction: column;
-        gap: 25px;
-        align-items: center;
+        /* Biarkan flex-direction default (row) dan pastikan ada jarak */
+        justify-content: space-between; 
     }
 
     .print-signatures > div {
-        width: 100%;
+        /* Atur lebar agar keduanya muat berdampingan */
+        width: 48%;
+        max-width: 200px; /* Batas maksimal agar tidak terlalu lebar */
     }
 }
 
