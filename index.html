@@ -778,6 +778,179 @@
       margin-bottom: 2mm;
     }
   }
+
+  @media (max-width: 992px) {
+    .container {
+        padding: 20px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .nav-tab {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+
+    .summary-grid {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .header img {
+        max-height: 60px;
+    }
+
+    .nav-tabs {
+        gap: 5px;
+    }
+
+    .nav-tab {
+        width: 100%;
+        text-align: center;
+        margin-right: 0;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .nav-tab.active {
+        box-shadow: none; /* Hilangkan shadow pada tab aktif di mobile */
+    }
+
+    .form-grid,
+    .history-filters,
+    .stat-cards {
+        grid-template-columns: 1fr; /* Ubah semua grid menjadi satu kolom */
+    }
+
+    .actions-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions-group .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .summary-section {
+        justify-content: center;
+    }
+    
+    .summary-grid {
+        grid-template-columns: auto 1fr;
+        width: 100%;
+    }
+
+    .summary-grid label {
+        text-align: left;
+        padding-right: 0;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+    
+    /* Penyesuaian untuk tabel agar lebih baik di mobile */
+    .table-container {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+    }
+    
+    .data-table thead {
+        /* Untuk mobile, terkadang lebih baik tidak men-sticky header jika lebar tabel sangat besar */
+        position: relative;
+    }
+    
+    .data-table .action-cell .btn {
+        margin: 2px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    
+    /* Tombol cetak di riwayat */
+    .data-table .action-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .print-signatures {
+        flex-direction: column;
+        gap: 25px;
+        align-items: center;
+    }
+
+    .print-signatures > div {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header .subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .form-section-title {
+        font-size: 1.3rem;
+    }
+    
+    .btn {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr; /* Jadikan 1 kolom penuh untuk layar sangat kecil */
+        gap: 10px;
+    }
+    
+    .summary-grid label {
+        text-align: left;
+    }
+
+    .total-amount-display {
+        text-align: left;
+        padding: 10px;
+    }
+}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -1457,508 +1630,7 @@
                 invoices: [],
                 suratJalan: [],
                 masterItems: [
-    {"code": "BRG-2", "name": "ALMUNIUM", "unit": "Kg", "price": 0},
-    {"code": "BRG-3", "name": "UNP", "unit": "Kg", "price": 0},
-    {"code": "j", "name": "SCRAP", "unit": "Kg", "price": 0},
-    {"code": "BRG-5", "name": "SIKU + UNP", "unit": "Kg", "price": 0},
-    {"code": "BRG-6", "name": "ASH", "unit": "Kg", "price": 0},
-    {"code": "BRG-7", "name": "RANGKA BETON BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-8", "name": "PARALON", "unit": "Kg", "price": 0},
-    {"code": "BRG-9", "name": "PULI", "unit": "Kg", "price": 0},
-    {"code": "BRG-10", "name": "TB", "unit": "Kg", "price": 0},
-    {"code": "BRG-11", "name": "CSR", "unit": "Kg", "price": 0},
-    {"code": "BRG-12", "name": "RONGSOK KABIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-13", "name": "ACP", "unit": "Kg", "price": 0},
-    {"code": "BRG-14", "name": "TEMBAGA", "unit": "Kg", "price": 0},
-    {"code": "BRG-15", "name": "PIPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-16", "name": "WF", "unit": "Kg", "price": 0},
-    {"code": "BRG-17", "name": "BON DIMINTA", "unit": "", "price": 0},
-    {"code": "BRG-18", "name": "HBEAM + PIPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-19", "name": "KIRIM", "unit": "", "price": 0},
-    {"code": "BRG-20", "name": "PLONGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-21", "name": "PCB", "unit": "Kg", "price": 0},
-    {"code": "BRG-22", "name": "TS", "unit": "Kg", "price": 0},
-    {"code": "BRG-23", "name": "JEMBATAN WF", "unit": "Rad", "price": 0},
-    {"code": "BRG-24", "name": "STAINLESS INDIA", "unit": "Kg", "price": 0},
-    {"code": "BRG-25", "name": "STAINLESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-26", "name": "SLINDER", "unit": "Kg", "price": 0},
-    {"code": "BRG-27", "name": "DINAMO", "unit": "Kg", "price": 0},
-    {"code": "BRG-28", "name": "KANAL U", "unit": "Kg", "price": 0},
-    {"code": "BRG-29", "name": "SPEARPART ALMUNIUM", "unit": "Kg", "price": 0},
-    {"code": "BRG-30", "name": "SPEARPART PLASTIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-31", "name": "SPEARPART BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-32", "name": "CK AYAM + STEK", "unit": "Kg", "price": 0},
-    {"code": "BRG-33", "name": "BESI UNP", "unit": "Kg", "price": 0},
-    {"code": "BRG-34", "name": "VIBRATOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-36", "name": "CK AYAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-37", "name": "SIKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-38", "name": "ACCU", "unit": "Kg", "price": 0},
-    {"code": "BRG-39", "name": "MINGGUAN", "unit": "Pcs", "price": 0},
-    {"code": "BRG-40", "name": "SPEARPART", "unit": "Rad", "price": 0},
-    {"code": "BRG-41", "name": "CNP", "unit": "Kg", "price": 0},
-    {"code": "BRG-42", "name": "CINCIN BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-43", "name": "HOLLO", "unit": "Kg", "price": 0},
-    {"code": "BRG-44", "name": "TABUNG PEREON", "unit": "Kg", "price": 0},
-    {"code": "BRG-45", "name": "BESI CAMPUR", "unit": "Kg", "price": 0},
-    {"code": "BRG-46", "name": "RANGKA BETON BARU", "unit": "Kg", "price": 0},
-    {"code": "BRG-47", "name": "KENI", "unit": "Kg", "price": 0},
-    {"code": "BRG-48", "name": "SENG GALVALUME", "unit": "M", "price": 0},
-    {"code": "BRG-49", "name": "BAJA RINGAN", "unit": "Pcs", "price": 0},
-    {"code": "BRG-50", "name": "HBEAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-51", "name": "DP H BEAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-52", "name": "KALENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-53", "name": "BAJA RINGAN BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-54", "name": "TIANG VOLLY", "unit": "Kg", "price": 0},
-    {"code": "BRG-55", "name": "OKSIGEN", "unit": "Tabung", "price": 0},
-    {"code": "BRG-56", "name": "BESI BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-57", "name": "GRAM BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-58", "name": "FEE", "unit": "Kg", "price": 0},
-    {"code": "BRG-59", "name": "PLATE", "unit": "Kg", "price": 0},
-    {"code": "BRG-60", "name": "PALET PLASTIK", "unit": "Pcs", "price": 0},
-    {"code": "BRG-61", "name": "WIREMESH  BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-62", "name": "KALENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-63", "name": "Cakar Ayam Bekas", "unit": "Kg", "price": 0},
-    {"code": "BRG-64", "name": "CICALENGKA - RANCAEKEK DC", "unit": "TF", "price": 0},
-    {"code": "BRG-65", "name": "RANCAEKEK - RANCAEKEK DC", "unit": "TF", "price": 0},
-    {"code": "BRG-66", "name": "KOORDINASI", "unit": "Rad", "price": 0},
-    {"code": "BRG-67", "name": "WIREMESH", "unit": "Lembar", "price": 0},
-    {"code": "BRG-68", "name": "ALMUNIUM KALENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-69", "name": "KOMPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-70", "name": "PRINTER", "unit": "Pcs", "price": 0},
-    {"code": "BRG-71", "name": "RONGSOK MOTOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-72", "name": "TREGSTANG", "unit": "Kg", "price": 0},
-    {"code": "BRG-73", "name": "SIEBEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-74", "name": "KUNINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-75", "name": "BOLA LAHER", "unit": "Kg", "price": 0},
-    {"code": "BRG-76", "name": "LOGAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-77", "name": "SENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-78", "name": "KERAN STAINLESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-79", "name": "HIDROLIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-80", "name": "TS 2", "unit": "Kg", "price": 0},
-    {"code": "BRG-81", "name": "BC", "unit": "Kg", "price": 0},
-    {"code": "BRG-82", "name": "TB", "unit": "Kg", "price": 0},
-    {"code": "BRG-83", "name": "KN", "unit": "Kg", "price": 0},
-    {"code": "BRG-84", "name": "RADIATOR KUNINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-85", "name": "ALM KAWAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-86", "name": "SKA", "unit": "Kg", "price": 0},
-    {"code": "BRG-87", "name": "BM", "unit": "Kg", "price": 0},
-    {"code": "BRG-88", "name": "ALM PLAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-89", "name": "ALM ARO", "unit": "Kg", "price": 0},
-    {"code": "BRG-90", "name": "ALM KREY", "unit": "Kg", "price": 0},
-    {"code": "BRG-91", "name": "PLASTIK PVC", "unit": "Kg", "price": 0},
-    {"code": "BRG-92", "name": "BETON 10 MM URIL", "unit": "Btg", "price": 0},
-    {"code": "BRG-93", "name": "BETON 16 MM URIL", "unit": "Btg", "price": 0},
-    {"code": "BRG-94", "name": "KAWAT TALI BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-95", "name": "MOBIL", "unit": "Unit", "price": 0},
-    {"code": "BRG-96", "name": "PLATE POTONG", "unit": "Kg", "price": 0},
-    {"code": "BRG-97", "name": "SARINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-98", "name": "ACP", "unit": "Kg", "price": 0},
-    {"code": "BRG-99", "name": "RAK", "unit": "Kg", "price": 0},
-    {"code": "BRG-100", "name": "BAUD BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-101", "name": "SENG ROLL", "unit": "Kg", "price": 0},
-    {"code": "BRG-102", "name": "KAWAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-103", "name": "DRUM", "unit": "Pcs", "price": 0},
-    {"code": "BRG-104", "name": "LAHER", "unit": "Kg", "price": 0},
-    {"code": "BRG-105", "name": "FORKLIFT", "unit": "Kg", "price": 0},
-    {"code": "BRG-106", "name": "TOREN", "unit": "Pcs", "price": 0},
-    {"code": "BRG-107", "name": "KEREN", "unit": "Kg", "price": 0},
-    {"code": "BRG-108", "name": "KABEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-109", "name": "DRUM", "unit": "PCS", "price": 0},
-    {"code": "BRG-110", "name": "JELIGEN", "unit": "PCS", "price": 0},
-    {"code": "BRG-111", "name": "DP RANGKA", "unit": "Rad", "price": 0},
-    {"code": "BRG-112", "name": "SELANG HIDROLIK", "unit": "Pcs", "price": 0},
-    {"code": "BRG-113", "name": "KABIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-114", "name": "GRAM ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-115", "name": "SENG ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-116", "name": "WIREMESH BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-117", "name": "TONG", "unit": "Pcs", "price": 0},
-    {"code": "BRG-118", "name": "BONDEX 0,7 MM", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-119", "name": "BETON 8 MM FULL", "unit": "BATANG", "price": 0},
-    {"code": "BRG-120", "name": "BETON 6 MM FULL", "unit": "BATANG", "price": 0},
-    {"code": "BRG-121", "name": "CNP 150 X 2,3 MM X 6 M", "unit": "BATANG", "price": 0},
-    {"code": "BRG-122", "name": "CNP 75 X 1,6 MM X 6M", "unit": "BATANG", "price": 0},
-    {"code": "BRG-123", "name": "CNP BAJA RINGAN 0,75 MM", "unit": "BATANG", "price": 0},
-    {"code": "BRG-124", "name": "RENG BAJA RINGAN 0,4 MM", "unit": "BATANG", "price": 0},
-    {"code": "BRG-125", "name": "KUNINGAN TEMBAGA", "unit": "Kg", "price": 0},
-    {"code": "BRG-126", "name": "ALM ATAP", "unit": "Kg", "price": 0},
-    {"code": "BRG-127", "name": "RADIATOR ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-128", "name": "ACU", "unit": "Kg", "price": 0},
-    {"code": "BRG-129", "name": "TIMAH", "unit": "Kg", "price": 0},
-    {"code": "BRG-130", "name": "RONGSOK A", "unit": "Kg", "price": 0},
-    {"code": "BRG-131", "name": "RONGSOK B", "unit": "Kg", "price": 0},
-    {"code": "BRG-132", "name": "KAWAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-133", "name": "CINCIN BETON BARU", "unit": "Kg", "price": 0},
-    {"code": "BRG-134", "name": "BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-135", "name": "KONTAKTOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-136", "name": "DP WF", "unit": "Rad", "price": 0},
-    {"code": "BRG-137", "name": "DP Seng", "unit": "Kg", "price": 0},
-    {"code": "BRG-139", "name": "SATU SET ALAT POTONG", "unit": "Kg", "price": 0},
-    {"code": "BRG-140", "name": "Win Sling", "unit": "Pcs", "price": 0},
-    {"code": "BRG-141", "name": "BETON 13 URIL", "unit": "BATANG", "price": 0},
-    {"code": "BRG-142", "name": "NCB", "unit": "Kg", "price": 0},
-    {"code": "BRG-143", "name": "BAK PEEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-144", "name": "ALMUNIUM SIKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-145", "name": "PER", "unit": "Kg", "price": 0},
-    {"code": "BRG-146", "name": "TONG", "unit": "Pcs", "price": 0},
-    {"code": "BRG-147", "name": "SIMER SIBEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-148", "name": "TANGGA PUTAR", "unit": "Kg", "price": 0},
-    {"code": "BRG-149", "name": "KABINET", "unit": "Kg", "price": 0},
-    {"code": "BRG-150", "name": "LUBANG", "unit": "Pcs", "price": 0},
-    {"code": "BRG-151", "name": "TIANG LISTRIK 8 M", "unit": "Pcs", "price": 0},
-    {"code": "BRG-152", "name": "WF DAN HBEAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-153", "name": "BESI BETON REJECT", "unit": "Kg", "price": 0},
-    {"code": "BRG-154", "name": "HBEAM 300 PLUS BESPLAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-155", "name": "HBEAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-156", "name": "SOBLEKER", "unit": "Pcs", "price": 0},
-    {"code": "BRG-157", "name": "TABUNG KECIL", "unit": "PCS", "price": 0},
-    {"code": "BRG-158", "name": "TABUNG BESAR", "unit": "PCS", "price": 0},
-    {"code": "BRG-159", "name": "KAYU GELONDONGAN", "unit": "Rad", "price": 0},
-    {"code": "BRG-160", "name": "KAYU DAN GENTENG", "unit": "Rad", "price": 0},
-    {"code": "BRG-161", "name": "WF 300", "unit": "Kg", "price": 0},
-    {"code": "BRG-162", "name": "WF 250", "unit": "Kg", "price": 0},
-    {"code": "BRG-163", "name": "HENPALET DAN SPERPART", "unit": "Kg", "price": 0},
-    {"code": "BRG-164", "name": "PIPA BOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-165", "name": "ROLINGDOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-166", "name": "KAWAT BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-167", "name": "PAKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-168", "name": "LAHER", "unit": "Kg", "price": 0},
-    {"code": "BRG-169", "name": "BAN BEKAS", "unit": "PCS", "price": 0},
-    {"code": "BRG-170", "name": "ALM SENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-171", "name": "PLAT POTONG", "unit": "Kg", "price": 0},
-    {"code": "BRG-172", "name": "TIHANG PIPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-173", "name": "CONTAKTOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-174", "name": "FEE SENG", "unit": "M", "price": 0},
-    {"code": "BRG-175", "name": "PARALON 12''", "unit": "BATANG", "price": 0},
-    {"code": "BRG-176", "name": "GRAM KUNINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-177", "name": "CILER", "unit": "Pcs", "price": 0},
-    {"code": "BRG-178", "name": "IBEAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-179", "name": "PLAT WAJIT", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-180", "name": "ONGKOS LUBANG", "unit": "LUBANG", "price": 0},
-    {"code": "BRG-181", "name": "TANGGA", "unit": "Kg", "price": 0},
-    {"code": "BRG-182", "name": "KERAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-183", "name": "GRAM ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-184", "name": "KABEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-185", "name": "KONTAKTOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-186", "name": "MESIN PRESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-187", "name": "DRUM RONGSOK", "unit": "Kg", "price": 0},
-    {"code": "BRG-188", "name": "KAWAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-189", "name": "PAKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-190", "name": "CIN CIN BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-191", "name": "GRAM TEMBAGA", "unit": "Kg", "price": 0},
-    {"code": "BRG-192", "name": "KURSI CHITOSE", "unit": "Kg", "price": 0},
-    {"code": "BRG-193", "name": "DRUM", "unit": "PCS", "price": 0},
-    {"code": "BRG-194", "name": "BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-195", "name": "GEAR BOX DLL", "unit": "Kg", "price": 0},
-    {"code": "BRG-196", "name": "RANGKA BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-197", "name": "SEPERPART PLASTIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-198", "name": "MESIN ROTI", "unit": "Kg", "price": 0},
-    {"code": "BRG-199", "name": "PLASTIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-200", "name": "TOREN STENLIS", "unit": "Kg", "price": 0},
-    {"code": "BRG-201", "name": "RAK", "unit": "Kg", "price": 0},
-    {"code": "BRG-202", "name": "PIPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-203", "name": "PARALON 8\"", "unit": "BATANG", "price": 0},
-    {"code": "BRG-204", "name": "BAUD", "unit": "Kg", "price": 0},
-    {"code": "BRG-205", "name": "SENG", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-206", "name": "WARMES M.8", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-207", "name": "MESIN DISEL", "unit": "PCS", "price": 0},
-    {"code": "BRG-208", "name": "BONDEX 0,75 MM", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-209", "name": "DINAMO", "unit": "Kg", "price": 0},
-    {"code": "BRG-210", "name": "SEPANDEX", "unit": "M", "price": 0},
-    {"code": "BRG-211", "name": "BLEKER", "unit": "Kg", "price": 0},
-    {"code": "BRG-212", "name": "GEAR BOX DINAMO", "unit": "Kg", "price": 0},
-    {"code": "BRG-213", "name": "RONGSOK MESIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-214", "name": "MESIN BEJING", "unit": "RAD", "price": 0},
-    {"code": "BRG-215", "name": "BLOWER", "unit": "Kg", "price": 0},
-    {"code": "BRG-216", "name": "GEAR BOX", "unit": "Kg", "price": 0},
-    {"code": "BRG-217", "name": "GEAR BOX ALM DINAMO ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-218", "name": "NCB", "unit": "Kg", "price": 0},
-    {"code": "BRG-219", "name": "PINTU BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-220", "name": "PANEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-221", "name": "KAP LAMPU", "unit": "Kg", "price": 0},
-    {"code": "BRG-222", "name": "ALAT TEKNIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-223", "name": "INP & H-BEEM", "unit": "Kg", "price": 0},
-    {"code": "BRG-224", "name": "HOIS 0,5 TON", "unit": "UNIT", "price": 0},
-    {"code": "BRG-225", "name": "HOIS 1 TON", "unit": "UNIT", "price": 0},
-    {"code": "BRG-226", "name": "TROSFAL", "unit": "Kg", "price": 0},
-    {"code": "BRG-227", "name": "EMBER", "unit": "Pcs", "price": 0},
-    {"code": "BRG-228", "name": "PREON", "unit": "Kg", "price": 0},
-    {"code": "BRG-229", "name": "ONERDIL", "unit": "Kg", "price": 0},
-    {"code": "BRG-230", "name": "HBEAM DAN PIPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-231", "name": "UNP & BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-232", "name": "BESI COR", "unit": "Kg", "price": 0},
-    {"code": "BRG-233", "name": "TIHANG 8 M", "unit": "BATANG", "price": 0},
-    {"code": "BRG-234", "name": "PARALON", "unit": "Kg", "price": 0},
-    {"code": "BRG-235", "name": "WF 500", "unit": "Kg", "price": 0},
-    {"code": "BRG-236", "name": "BEARING", "unit": "Kg", "price": 0},
-    {"code": "BRG-237", "name": "BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-238", "name": "WF 200", "unit": "Kg", "price": 0},
-    {"code": "BRG-239", "name": "LADIATOR KUNINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-240", "name": "GARDAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-241", "name": "BAUD", "unit": "Kg", "price": 0},
-    {"code": "BRG-242", "name": "KARET", "unit": "Kg", "price": 0},
-    {"code": "BRG-243", "name": "KABEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-244", "name": "PARALON", "unit": "Kg", "price": 0},
-    {"code": "BRG-245", "name": "PAGER", "unit": "Kg", "price": 0},
-    {"code": "BRG-246", "name": "MESIN DOMPLENG LENGKAP", "unit": "Kg", "price": 0},
-    {"code": "BRG-247", "name": "MESIN DOMPLENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-248", "name": "TABUNG", "unit": "Kg", "price": 0},
-    {"code": "BRG-249", "name": "BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-250", "name": "SAKLAR", "unit": "Kg", "price": 0},
-    {"code": "BRG-251", "name": "SEPERPART SETENLIS", "unit": "Kg", "price": 0},
-    {"code": "BRG-252", "name": "WF 200", "unit": "Kg", "price": 0},
-    {"code": "BRG-253", "name": "SEPANDEX BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-254", "name": "CINCIN TROSFAL", "unit": "Kg", "price": 0},
-    {"code": "BRG-255", "name": "KOMPRESOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-256", "name": "SELING", "unit": "Kg", "price": 0},
-    {"code": "BRG-257", "name": "KOMPA", "unit": "Kg", "price": 0},
-    {"code": "BRG-258", "name": "TUTUP DYNAMO", "unit": "Kg", "price": 0},
-    {"code": "BRG-259", "name": "DRUM", "unit": "Kg", "price": 0},
-    {"code": "BRG-260", "name": "BESI SIKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-261", "name": "CNP 20", "unit": "Kg", "price": 0},
-    {"code": "BRG-262", "name": "KERAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-263", "name": "TAKEL", "unit": "Pcs", "price": 0},
-    {"code": "BRG-264", "name": "TRAFO", "unit": "Kg", "price": 0},
-    {"code": "BRG-265", "name": "NEVEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-266", "name": "BAUD", "unit": "Kg", "price": 0},
-    {"code": "BRG-267", "name": "WF", "unit": "Kg", "price": 0},
-    {"code": "BRG-268", "name": "BOX PLASTIK", "unit": "Pcs", "price": 0},
-    {"code": "BRG-269", "name": "ASH", "unit": "Kg", "price": 0},
-    {"code": "BRG-270", "name": "CNP 10", "unit": "Kg", "price": 0},
-    {"code": "BRG-271", "name": "CUBIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-272", "name": "RONGSOK ROLL", "unit": "Kg", "price": 0},
-    {"code": "BRG-273", "name": "PALET", "unit": "Kg", "price": 0},
-    {"code": "BRG-274", "name": "COMPUTER", "unit": "PCS", "price": 0},
-    {"code": "BRG-275", "name": "MONITOR", "unit": "PCS", "price": 0},
-    {"code": "BRG-276", "name": "PLATE ALUMUNIUM", "unit": "Kg", "price": 0},
-    {"code": "BRG-277", "name": "MESIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-278", "name": "AC", "unit": "Kg", "price": 0},
-    {"code": "BRG-279", "name": "SPARE PART STAINLESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-280", "name": "HANDKLIP", "unit": "Pcs", "price": 0},
-    {"code": "BRG-281", "name": "TROLLY", "unit": "Pcs", "price": 0},
-    {"code": "BRG-282", "name": "GEAR BOX", "unit": "Kg", "price": 0},
-    {"code": "BRG-283", "name": "MESIN GERGAJI", "unit": "Kg", "price": 0},
-    {"code": "BRG-284", "name": "WF-200", "unit": "BTG", "price": 0},
-    {"code": "BRG-285", "name": "CNP 100", "unit": "BTG", "price": 0},
-    {"code": "BRG-286", "name": "BETON 12 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-287", "name": "PAGAR BRC", "unit": "Kg", "price": 0},
-    {"code": "BRG-288", "name": "RODA", "unit": "Kg", "price": 0},
-    {"code": "BRG-289", "name": "ALAT LISTRIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-290", "name": "MESIN STENLIS", "unit": "UNIT", "price": 0},
-    {"code": "BRG-291", "name": "TALANG AIR", "unit": "Kg", "price": 0},
-    {"code": "BRG-292", "name": "ANGKUR", "unit": "PCS", "price": 0},
-    {"code": "BRG-293", "name": "BAUD", "unit": "PCS", "price": 0},
-    {"code": "BRG-294", "name": "RING", "unit": "PCS", "price": 0},
-    {"code": "BRG-295", "name": "SPAN SCROEP", "unit": "PCS", "price": 0},
-    {"code": "BRG-296", "name": "TOREN KEMPU", "unit": "PCS", "price": 0},
-    {"code": "BRG-297", "name": "KAWAT DURI", "unit": "Kg", "price": 0},
-    {"code": "BRG-298", "name": "UNP", "unit": "Kg", "price": 0},
-    {"code": "BRG-299", "name": "TIANG 9 M", "unit": "BTG", "price": 0},
-    {"code": "BRG-300", "name": "CNP", "unit": "Kg", "price": 0},
-    {"code": "BRG-301", "name": "KONTRAKTOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-302", "name": "BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-303", "name": "LADIATOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-304", "name": "RITASE CICALENGKA", "unit": "TF", "price": 0},
-    {"code": "BRG-305", "name": "RITASE RANCAEKEK", "unit": "TF", "price": 0},
-    {"code": "BRG-306", "name": "CNP 100", "unit": "BTG", "price": 0},
-    {"code": "BRG-307", "name": "MESIN", "unit": "UNIT", "price": 0},
-    {"code": "BRG-308", "name": "KOMPLAYER", "unit": "UNIT", "price": 0},
-    {"code": "BRG-309", "name": "TIHANG LISTRIK 9 M", "unit": "BTG", "price": 0},
-    {"code": "BRG-310", "name": "KABIN", "unit": "UNIT", "price": 0},
-    {"code": "BRG-311", "name": "GRAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-312", "name": "TIANG PLANG", "unit": "Pcs", "price": 0},
-    {"code": "BRG-313", "name": "HIDROLIK KECIL", "unit": "PCS", "price": 0},
-    {"code": "BRG-314", "name": "PAKU BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-315", "name": "PAKU BETON", "unit": "Kg", "price": 0},
-    {"code": "BRG-316", "name": "TIHANG TLP 7 M", "unit": "BTG", "price": 0},
-    {"code": "BRG-317", "name": "PAGAR", "unit": "RAD", "price": 0},
-    {"code": "BRG-318", "name": "ARSIP", "unit": "Kg", "price": 0},
-    {"code": "BRG-319", "name": "PAKU ROOFING", "unit": "Kg", "price": 0},
-    {"code": "BRG-320", "name": "BAJA RINGAN 0,75", "unit": "BTG", "price": 0},
-    {"code": "BRG-321", "name": "BAJA RINGAN 0,70", "unit": "BTG", "price": 0},
-    {"code": "BRG-322", "name": "SPANDECK", "unit": "M", "price": 0},
-    {"code": "BRG-323", "name": "BESI BOLA", "unit": "Kg", "price": 0},
-    {"code": "BRG-324", "name": "KANAL C", "unit": "Kg", "price": 0},
-    {"code": "BRG-325", "name": "DINAMO STATER", "unit": "PCS", "price": 0},
-    {"code": "BRG-326", "name": "LETTER C BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-327", "name": "SIKAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-328", "name": "DAUN PINTU BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-329", "name": "PARALON 2\"", "unit": "BTG", "price": 0},
-    {"code": "BRG-330", "name": "SELANG VVC", "unit": "ROLL", "price": 0},
-    {"code": "BRG-331", "name": "HIDROLIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-332", "name": "TENGKI 16 LITER", "unit": "UNIT", "price": 0},
-    {"code": "BRG-333", "name": "KARDUS", "unit": "Kg", "price": 0},
-    {"code": "BRG-334", "name": "SOLAR", "unit": "RAD", "price": 0},
-    {"code": "BRG-335", "name": "ANGKUTAN ELOD / SLUDGE", "unit": "RIT", "price": 0},
-    {"code": "BRG-336", "name": "BUBUK BESI / SKIL", "unit": "Kg", "price": 0},
-    {"code": "BRG-337", "name": "ONGKOS KERJA", "unit": "RAD", "price": 0},
-    {"code": "BRG-338", "name": "BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-339", "name": "TIHANG LISTRIK 11 M", "unit": "BTG", "price": 0},
-    {"code": "BRG-340", "name": "ROLLINGDOR", "unit": "PCS", "price": 0},
-    {"code": "BRG-341", "name": "PLATE PLENES", "unit": "Kg", "price": 0},
-    {"code": "BRG-342", "name": "BETON 19 mm", "unit": "PCS", "price": 0},
-    {"code": "BRG-343", "name": "BETON 10 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-344", "name": "KOMPRESOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-345", "name": "RONGSOK", "unit": "Kg", "price": 0},
-    {"code": "BRG-346", "name": "KAWAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-347", "name": "BAUT", "unit": "Kg", "price": 0},
-    {"code": "BRG-348", "name": "BESI BETON 10 MM FULL", "unit": "BTG", "price": 0},
-    {"code": "BRG-349", "name": "DUS", "unit": "Kg", "price": 0},
-    {"code": "BRG-350", "name": "BETON BAKAR", "unit": "Kg", "price": 0},
-    {"code": "BRG-351", "name": "LOGAM CAMPUR", "unit": "Kg", "price": 0},
-    {"code": "BRG-352", "name": "ALM ACP", "unit": "RAD", "price": 0},
-    {"code": "BRG-353", "name": "PINTU POLINGGET", "unit": "Kg", "price": 0},
-    {"code": "BRG-354", "name": "BOLA LAHER", "unit": "Kg", "price": 0},
-    {"code": "BRG-355", "name": "RENG BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-356", "name": "ATAP 0,35", "unit": "LBR", "price": 0},
-    {"code": "BRG-357", "name": "ATAP PIBER", "unit": "LBR", "price": 0},
-    {"code": "BRG-358", "name": "RUFING 5 CM", "unit": "Pcs", "price": 0},
-    {"code": "BRG-359", "name": "RUFING 3 CM", "unit": "Pcs", "price": 0},
-    {"code": "BRG-360", "name": "SENG TALANG", "unit": "M", "price": 0},
-    {"code": "BRG-361", "name": "KALENG PRES", "unit": "Kg", "price": 0},
-    {"code": "BRG-362", "name": "LPG BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-363", "name": "KARUNG GUNNY", "unit": "PCS", "price": 0},
-    {"code": "BRG-364", "name": "BAJA RINGAN BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-365", "name": "KANDANG MAGOT", "unit": "UNIT", "price": 0},
-    {"code": "BRG-366", "name": "DINDING KANDANG MAGOT", "unit": "UNIT", "price": 0},
-    {"code": "BRG-367", "name": "FIBER", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-368", "name": "TALANG PARALON", "unit": "BTG", "price": 0},
-    {"code": "BRG-369", "name": "WASTAPEL KENCING", "unit": "PCS", "price": 0},
-    {"code": "BRG-370", "name": "OPEN COKLAT", "unit": "Kg", "price": 0},
-    {"code": "BRG-371", "name": "ALDELON", "unit": "LBR", "price": 0},
-    {"code": "BRG-372", "name": "SEKIL", "unit": "Kg", "price": 0},
-    {"code": "BRG-373", "name": "DP SEWA BANGUNAN", "unit": "RAD", "price": 0},
-    {"code": "BRG-374", "name": "CAKAR  AYAM", "unit": "Kg", "price": 0},
-    {"code": "BRG-375", "name": "BESI BAHAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-376", "name": "HOICE", "unit": "Pcs", "price": 0},
-    {"code": "BRG-377", "name": "TENGKI", "unit": "Kg", "price": 0},
-    {"code": "BRG-378", "name": "RAK BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-379", "name": "PULI", "unit": "Kg", "price": 0},
-    {"code": "BRG-380", "name": "PELASTIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-381", "name": "WARMES BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-382", "name": "TIMBANGAN", "unit": "PCS", "price": 0},
-    {"code": "BRG-383", "name": "GERGAJI", "unit": "Kg", "price": 0},
-    {"code": "BRG-384", "name": "RDT", "unit": "Kg", "price": 0},
-    {"code": "BRG-385", "name": "TENGKI", "unit": "Kg", "price": 0},
-    {"code": "BRG-386", "name": "SENG BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-387", "name": "DRIL", "unit": "Kg", "price": 0},
-    {"code": "BRG-388", "name": "LEMARI KABINET", "unit": "UNIT", "price": 0},
-    {"code": "BRG-389", "name": "TANGGA", "unit": "Kg", "price": 0},
-    {"code": "BRG-390", "name": "PLATE STRIP", "unit": "Kg", "price": 0},
-    {"code": "BRG-391", "name": "SOKET", "unit": "Kg", "price": 0},
-    {"code": "BRG-392", "name": "SIWAR", "unit": "Kg", "price": 0},
-    {"code": "BRG-393", "name": "Dinabolt", "unit": "Kg", "price": 0},
-    {"code": "BRG-394", "name": "OLI BAGUS", "unit": "DRUM", "price": 0},
-    {"code": "BRG-395", "name": "ROLLING DOR", "unit": "UNIT", "price": 0},
-    {"code": "BRG-396", "name": "SENG PENDEK", "unit": "Kg", "price": 0},
-    {"code": "BRG-397", "name": "CNP BAJA RINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-398", "name": "SCRAP PLAT STRIP", "unit": "Kg", "price": 0},
-    {"code": "BRG-399", "name": "SCRAP REL", "unit": "Kg", "price": 0},
-    {"code": "BRG-400", "name": "SENG", "unit": "Kg", "price": 0},
-    {"code": "BRG-401", "name": "MAJALENGKA", "unit": "TF", "price": 0},
-    {"code": "BRG-402", "name": "RITASE MAJALENGKA", "unit": "TF", "price": 0},
-    {"code": "BRG-403", "name": "TANGKI", "unit": "UNIT", "price": 0},
-    {"code": "BRG-404", "name": "PILOW", "unit": "Kg", "price": 0},
-    {"code": "BRG-405", "name": "BETON 6 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-406", "name": "BETON 8 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-407", "name": "BETON 10 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-408", "name": "TIANG 7 M", "unit": "PCS", "price": 0},
-    {"code": "BRG-409", "name": "LAS SASIS", "unit": "RAD", "price": 0},
-    {"code": "BRG-410", "name": "JEMBATAN DRILL", "unit": "Kg", "price": 0},
-    {"code": "BRG-411", "name": "WF & HOLLOW", "unit": "Kg", "price": 0},
-    {"code": "BRG-412", "name": "RELL", "unit": "Kg", "price": 0},
-    {"code": "BRG-413", "name": "MESEN PERAHU", "unit": "UNIT", "price": 0},
-    {"code": "BRG-414", "name": "HOLLO 5 x 10", "unit": "BTG", "price": 0},
-    {"code": "BRG-415", "name": "HOLLO 4 x 6", "unit": "BTG", "price": 0},
-    {"code": "BRG-416", "name": "HOLLO 4 x 4", "unit": "BTG", "price": 0},
-    {"code": "BRG-417", "name": "HANDCLIFT 2000 KG", "unit": "UNIT", "price": 0},
-    {"code": "BRG-418", "name": "HANDCLIFT 3000 KG", "unit": "UNIT", "price": 0},
-    {"code": "BRG-419", "name": "DINAMO ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-420", "name": "GIGI", "unit": "Kg", "price": 0},
-    {"code": "BRG-421", "name": "RANTAI", "unit": "Kg", "price": 0},
-    {"code": "BRG-422", "name": "GRANIT", "unit": "M²", "price": 0},
-    {"code": "BRG-423", "name": "ASH STENLIS", "unit": "Kg", "price": 0},
-    {"code": "BRG-424", "name": "HENKLIF 2 TON", "unit": "PCS", "price": 0},
-    {"code": "BRG-425", "name": "TENGKI", "unit": "UNIT", "price": 0},
-    {"code": "BRG-426", "name": "JERIGEN", "unit": "Pcs", "price": 0},
-    {"code": "BRG-427", "name": "PAGAR BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-428", "name": "HOLLO BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-429", "name": "RANGKA BETON BARU", "unit": "Kg", "price": 0},
-    {"code": "BRG-430", "name": "BAJARINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-431", "name": "RONGSOK", "unit": "Kg", "price": 0},
-    {"code": "BRG-432", "name": "BETON 10", "unit": "Btg", "price": 0},
-    {"code": "BRG-433", "name": "BETON 8", "unit": "Kg", "price": 0},
-    {"code": "BRG-434", "name": "KERAMIK", "unit": "M", "price": 0},
-    {"code": "BRG-435", "name": "MAJALENGKA", "unit": "TF", "price": 0},
-    {"code": "BRG-436", "name": "MESIN PERAHU", "unit": "UNIT", "price": 0},
-    {"code": "BRG-437", "name": "BETON 6 MM", "unit": "BTG", "price": 0},
-    {"code": "BRG-438", "name": "STAINLESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-439", "name": "BAJARINGAN", "unit": "Kg", "price": 0},
-    {"code": "BRG-440", "name": "KRAN STAINLESS", "unit": "Kg", "price": 0},
-    {"code": "BRG-441", "name": "GEARBOX", "unit": "Kg", "price": 0},
-    {"code": "BRG-442", "name": "KRAN BESI", "unit": "Kg", "price": 0},
-    {"code": "BRG-443", "name": "SENG WUWUNG", "unit": "M", "price": 0},
-    {"code": "BRG-444", "name": "JENDELA ALMUNIUM", "unit": "PCS", "price": 0},
-    {"code": "BRG-445", "name": "BONDEX 0,70 MM", "unit": "LEMBAR", "price": 0},
-    {"code": "BRG-446", "name": "SPEARPART", "unit": "Kg", "price": 0},
-    {"code": "BRG-447", "name": "T.B.C", "unit": "Kg", "price": 0},
-    {"code": "BRG-448", "name": "RAM SIKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-449", "name": "TANGGA DAN RAK", "unit": "RAD", "price": 0},
-    {"code": "BRG-450", "name": "SENG GALVALUM DAN RENG", "unit": "M", "price": 0},
-    {"code": "BRG-451", "name": "PIPA 2,5\"", "unit": "BTG", "price": 0},
-    {"code": "BRG-452", "name": "SEPERPART BEKU", "unit": "Kg", "price": 0},
-    {"code": "BRG-453", "name": "OLI BEKAS", "unit": "DRUM", "price": 0},
-    {"code": "BRG-454", "name": "TOREN AIR 500 L", "unit": "PCS", "price": 0},
-    {"code": "BRG-455", "name": "TONG CIMOL 200 L", "unit": "PCS", "price": 0},
-    {"code": "BRG-456", "name": "ANGKUR BEKAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-457", "name": "MESIN", "unit": "Kg", "price": 0},
-    {"code": "BRG-458", "name": "DINAMO + STAINLIS + ALM", "unit": "Kg", "price": 0},
-    {"code": "BRG-459", "name": "TIHANG TAKEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-460", "name": "AYAKAN BATU ( 2 UNIT )", "unit": "RAD", "price": 0},
-    {"code": "BRG-461", "name": "TIANG LISTRIK 9 M", "unit": "PCS", "price": 0},
-    {"code": "BRG-462", "name": "SIBEL", "unit": "Kg", "price": 0},
-    {"code": "BRG-463", "name": "PARALON TALANG", "unit": "BTG", "price": 0},
-    {"code": "BRG-464", "name": "BONDEX", "unit": "LBR", "price": 0},
-    {"code": "BRG-465", "name": "WARMES M.10", "unit": "LBR", "price": 0},
-    {"code": "BRG-466", "name": "BREKER", "unit": "Kg", "price": 0},
-    {"code": "BRG-467", "name": "TIANG TELEPON 7 M", "unit": "PCS", "price": 0},
-    {"code": "BRG-468", "name": "TIANG TELEPON 9 M", "unit": "PCS", "price": 0},
-    {"code": "BRG-469", "name": "BESI BETON 8 FULL", "unit": "BTG", "price": 0},
-    {"code": "BRG-470", "name": "CATOK", "unit": "PCS", "price": 0},
-    {"code": "BRG-471", "name": "SCRAP HSS", "unit": "Kg", "price": 0},
-    {"code": "BRG-472", "name": "BATU GERINDA", "unit": "Kg", "price": 0},
-    {"code": "BRG-473", "name": "JACK HUMMER", "unit": "Kg", "price": 0},
-    {"code": "BRG-474", "name": "GEAR", "unit": "Kg", "price": 0},
-    {"code": "BRG-475", "name": "HSS", "unit": "Kg", "price": 0},
-    {"code": "BRG-476", "name": "TRAPO", "unit": "Kg", "price": 0},
-    {"code": "BRG-477", "name": "KIKIR", "unit": "Kg", "price": 0},
-    {"code": "BRG-478", "name": "HBEAM 250", "unit": "Kg", "price": 0},
-    {"code": "BRG-479", "name": "ALAT BOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-480", "name": "BESI BOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-481", "name": "KAWAT LAS", "unit": "Kg", "price": 0},
-    {"code": "BRG-482", "name": "ALAT BUBUT", "unit": "Kg", "price": 0},
-    {"code": "BRG-483", "name": "BAUD CAMPUR", "unit": "Kg", "price": 0},
-    {"code": "BRG-484", "name": "SPERPART ESKALATOR", "unit": "Kg", "price": 0},
-    {"code": "BRG-485", "name": "LAMPU NEON", "unit": "PCS", "price": 0},
-    {"code": "BRG-486", "name": "SENG GALVALUM", "unit": "M", "price": 0},
-    {"code": "BRG-487", "name": "KERAMIK LISTRIK", "unit": "Kg", "price": 0},
-    {"code": "BRG-488", "name": "MESIN KOMPESOR", "unit": "PCS", "price": 0},
-    {"code": "BRG-489", "name": "JENSET", "unit": "UNIT", "price": 0},
-    {"code": "BRG-490", "name": "ALUMUNIUM", "unit": "Kg", "price": 0},
-    {"code": "BRG-491", "name": "BAKET BEKO", "unit": "Kg", "price": 0},
-    {"code": "BRG-492", "name": "Filter Hydraulic Oil", "unit": "Pcs", "price": 0},
-    {"code": "BRG-493", "name": "Filter Solar", "unit": "Pcs", "price": 0},
-    {"code": "BRG-494", "name": "Filter Udara", "unit": "Pcs", "price": 0},
-    {"code": "BRG-495", "name": "Fan Belt", "unit": "Pcs", "price": 0},
-    {"code": "BRG-496", "name": "Cover Clutte", "unit": "Pcs", "price": 0},
-    {"code": "BRG-497", "name": "Pump Assy", "unit": "Pcs", "price": 0},
-    {"code": "BRG-498", "name": "Master Cluute", "unit": "Pcs", "price": 0},
-    {"code": "BRG-499", "name": "Minyak Rem", "unit": "Pcs", "price": 0},
-    {"code": "BRG-500", "name": "Bondex Busa", "unit": "Lembar", "price": 0},
-    {"code": "BRG-496", "name": "COUNTAINER 20 FIT", "unit": "UNIT", "price": 0},
-    {"code": "BRG-497", "name": "TIANG TLP 9 M", "unit": "BATANG", "price": 0},
-    {"code": "BRG-498", "name": "BETON 16 URIL FULL", "unit": "PCS", "price": 0},
-    {"code": "BRG-499", "name": "BETON 8 POLOS FULL", "unit": "PCS", "price": 0},
-    {"code": "BRG-450", "name": "TALANG", "unit": "Kg", "price": 0}
+    
 ],
                 config: {
                     noPenjualan: 1,
