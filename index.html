@@ -536,6 +536,15 @@
     display: none;
   }
 
+  /* Tambahkan aturan baru ini di CSS utama (di luar @media print) */
+body.printing > *:not(#print-area) {
+    display: none !important;
+}
+
+body.printing #print-area {
+    display: block !important;
+}
+
   @media print {
     * {
       margin: 0;
@@ -566,9 +575,9 @@
       font-size: 10pt;
     }
 
-    body > *:not(#print-area) {
+    /*body > *:not(#print-area) {
       display: none !important;
-    }
+    }*/
 
     #print-area {
       display: block !important;
@@ -3316,25 +3325,26 @@
         }
 
         printTransaction(dataKey, id, template) {
-            const transaction = this.data[dataKey]?.find((t) => t.id === id);
-            if (!transaction) { 
-                this.showNotification("Transaksi tidak ditemukan.", false); 
-                return; 
-            }
-            
-            const printHTML = this.generatePrintHTML(transaction, template);
-            try {
-                const printArea = document.getElementById("print-area");
-                printArea.innerHTML = printHTML;
-                setTimeout(() => {
-                    window.print();
-                    printArea.innerHTML = "";
-                }, 100);
-            } catch (error) {
-                console.error("Print failed:", error);
-                this.showNotification("Gagal mencetak dokumen.", false);
-            }
-        }
+    const transaction = this.data[dataKey]?.find((t) => t.id === id);
+    if (!transaction) { 
+        this.showNotification("Transaksi tidak ditemukan.", false); 
+        return; 
+    }
+    
+    const printArea = document.getElementById("print-area");
+    printArea.innerHTML = this.generatePrintHTML(transaction, template);
+    
+    // Tambahkan class ke body
+    document.body.classList.add('printing');
+
+    setTimeout(() => {
+        window.print();
+        
+        // Hapus class setelah mencetak
+        document.body.classList.remove('printing');
+        printArea.innerHTML = "";
+    }, 500); // Tetap gunakan timeout yang lebih lama
+}
       }
 
       document.addEventListener("DOMContentLoaded", () => {
