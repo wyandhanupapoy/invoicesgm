@@ -2152,7 +2152,7 @@ body.printing #print-area {
                     alamatPerusahaan: "Jl. Raya Gedebage No. 95 Bandung",
                     kontak: "CP. Irwan : 082117800626, CP. Uwem : 082318188863",
                     rekening: "BANK BCA No. Rek. 2801011286 a.n Maman Suherman",
-                    tagline: "JUAL BELI BESI TUA/BARU - RANGKA BETON/LOGAM - TIANG LISTRIK/TELP DAN KONSTRUKSI BAJA",
+                    tagline: "JUAL BELI BESI TUA/BARU - RANGKA BETON/LOGAM - TIANG LISTRIK/TELP DAN KONSTRUKSI BAJA & PAKAN TERNAK",
                     logoUrl: "logo.png",
                 },
                 partyNames: { customer: [], pemasok: [], recipient: [] },
@@ -2927,125 +2927,202 @@ body.printing #print-area {
         }
         
         generatePrintHTML(transaction, template) {
-            let printId = transaction.id || 'N/A';
-            if (template === "surat_jalan") {
-                printId = transaction.id.replace(/SGM\.(PJ|PB|PJF|PBV)/, "SGM.SJ");
-            }
-            
-            const config = this.data.config;
-            const isTransaction = transaction.grandTotal !== undefined;
-            const partyName = transaction.customer || transaction.pemasok || transaction.penerima || 'N/A';
-            const grandTotalInteger = Math.floor(transaction.grandTotal || 0);
+    let printId = transaction.id || 'N/A';
+    if (template === "surat_jalan") {
+        printId = transaction.id.replace(/SGM\.(PJ|PB|PJF|PBV)/, "SGM.SJ");
+    }
+    
+    const config = this.data.config;
+    const isTransaction = transaction.grandTotal !== undefined;
+    const partyName = transaction.customer || transaction.pemasok || transaction.penerima || 'N/A';
+    const grandTotalInteger = Math.floor(transaction.grandTotal || 0);
 
-            let title = "SURAT JALAN";
-            if (template === "faktur") title = `FAKTUR ${transaction.customer ? "PENJUALAN" : "PEMBELIAN"}`;
-            else if (template === "invoice") title = `INVOICE ${transaction.transType === "sale" ? "PENJUALAN" : "PEMBELIAN"}`;
-            else if (template === "kwitansi") title = "KWITANSI PEMBAYARAN";
-            
-            let noLabel = "No. Surat Jalan";
-            if (template === "faktur") noLabel = "No. Faktur";
-            else if (template === "invoice") noLabel = "No. Invoice";
-            else if (template === "kwitansi") noLabel = "No. Kwitansi";
+    let title = "SURAT JALAN";
+    if (template === "faktur") title = `FAKTUR ${transaction.customer ? "PENJUALAN" : "PEMBELIAN"}`;
+    else if (template === "invoice") title = `INVOICE ${transaction.transType === "sale" ? "PENJUALAN" : "PEMBELIAN"}`;
+    else if (template === "kwitansi") title = "KWITANSI PEMBAYARAN";
+    
+    let noLabel = "No. Surat Jalan";
+    if (template === "faktur") noLabel = "No. Faktur";
+    else if (template === "invoice") noLabel = "No. Invoice";
+    else if (template === "kwitansi") noLabel = "No. Kwitansi";
 
-            let metaContent = `<div class="meta-tables">
-                <table class="meta-table">
-                    <tr><td>Kepada Yth.</td><td>: ${this.sanitizeInput(partyName)}</td></tr>
-                    <tr><td>Alamat</td><td>: ${this.sanitizeInput(transaction.alamat || "-")}</td></tr>
-                    ${transaction.telepon ? `<tr><td>Telepon</td><td>: ${this.sanitizeInput(transaction.telepon)}</td></tr>` : ""}
-                </table>
-                <table class="meta-table">
-                    <tr><td>${noLabel}</td><td>: ${printId}</td></tr>
-                    <tr><td>Tanggal</td><td>: ${this.formatDate(transaction.tanggal)}</td></tr>
-                    ${isTransaction && transaction.ref && template !== "surat_jalan" ? `<tr><td>Ref</td><td>: ${this.sanitizeInput(transaction.ref)}</td></tr>` : ""}
-                    ${transaction.noKendaraan ? `<tr><td>No. Kendaraan</td><td>: ${this.sanitizeInput(transaction.noKendaraan)}</td></tr>` : ""}
-                    ${isTransaction && transaction.metodePembayaran && template !== "surat_jalan" ? `<tr><td>Metode Pembayaran</td><td>: ${this.sanitizeInput(transaction.metodePembayaran)}</td></tr>` : ""}
-                </table>
-            </div>`;
+    let metaContent = `<div class="meta-tables">
+        <table class="meta-table">
+            <tr><td>Kepada Yth.</td><td>: ${this.sanitizeInput(partyName)}</td></tr>
+            <tr><td>Alamat</td><td>: ${this.sanitizeInput(transaction.alamat || "-")}</td></tr>
+            ${transaction.telepon ? `<tr><td>Telepon</td><td>: ${this.sanitizeInput(transaction.telepon)}</td></tr>` : ""}
+        </table>
+        <table class="meta-table">
+            <tr><td>${noLabel}</td><td>: ${printId}</td></tr>
+            <tr><td>Tanggal</td><td>: ${this.formatDate(transaction.tanggal)}</td></tr>
+            ${isTransaction && transaction.ref && template !== "surat_jalan" ? `<tr><td>Ref</td><td>: ${this.sanitizeInput(transaction.ref)}</td></tr>` : ""}
+            ${transaction.noKendaraan ? `<tr><td>No. Kendaraan</td><td>: ${this.sanitizeInput(transaction.noKendaraan)}</td></tr>` : ""}
+            ${isTransaction && transaction.metodePembayaran && template !== "surat_jalan" ? `<tr><td>Metode Pembayaran</td><td>: ${this.sanitizeInput(transaction.metodePembayaran)}</td></tr>` : ""}
+        </table>
+    </div>`;
 
-            if (template === "kwitansi") {
-                metaContent = `<div class="kwitansi-box">
-                    <table class="meta-table" style="width: 100%; table-layout: fixed;">
-                        <tr><td style="width: 40mm; font-weight: bold;">Sudah terima dari</td><td style="width: calc(100% - 40mm);">: ${this.sanitizeInput(partyName)}</td></tr>
-                        <tr><td style="font-weight: bold;">Uang Sejumlah</td><td>: <b>${this.formatCurrency(transaction.grandTotal || 0)}</b></td></tr>
-                        <tr><td style="font-weight: bold; vertical-align: top;">Terbilang</td><td style="vertical-align: top;" class="terbilang">: ${this.terbilang(grandTotalInteger)} rupiah</td></tr>
-                        <tr><td style="font-weight: bold; vertical-align: top;">Untuk Pembayaran</td><td style="vertical-align: top;">: Pelunasan ${transaction.ppn ? 'Invoice' : 'Faktur'} No. ${transaction.id || "N/A"}</td></tr>
-                        ${transaction.metodePembayaran ? `<tr><td style="font-weight: bold;">Metode Pembayaran</td><td>: ${this.sanitizeInput(transaction.metodePembayaran)}</td></tr>` : ""}
-                    </table>
-                </div>`;
-            }
-
-            const itemsContent = template !== "kwitansi" ? `<table class="items-table">
-                <thead>
-                    <tr>
-                        <th style="width:5%;">No</th>
-                        <th style="width:40%;">Nama Barang</th>
-                        <th style="width:10%; text-align:right;">Qty</th>
-                        <th style="width:10%; text-align:center;">Satuan</th>
-                        ${isTransaction ? `
-                            <th style="width:15%; text-align:right;">Harga Satuan</th>
-                            <th style="width:20%; text-align:right;">Jumlah</th>
-                        ` : ""}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${(transaction.items || []).map((item, i) => `<tr>
-                        <td style="text-align:center;">${i + 1}</td>
-                        <td>${this.sanitizeInput(item.name)} ${item.code ? `<small>(${this.sanitizeInput(item.code)})</small>` : ""}</td>
-                        <td style="text-align:right;">${this.formatNumber(item.qty)}</td>
-                        <td style="text-align:center;">${this.sanitizeInput(item.unit || "-")}</td>
-                        ${isTransaction ? `
-                            <td style="text-align:right;">${this.formatNumber(item.price || 0)}</td>
-                            <td style="text-align:right;">${this.formatNumber(item.total || 0)}</td>
-                        ` : ""}
-                    </tr>`).join("")}
-                </tbody>
-            </table>` : "";
-
-            const summaryContent = isTransaction && template !== "surat_jalan" && template !== "kwitansi" ? `<table class="summary-table">
-                <tr><td>Subtotal</td><td style="text-align:right;">${this.formatNumber(transaction.subtotal || 0)}</td></tr>
-                ${(transaction.discount || 0) > 0 ? `<tr><td>Diskon</td><td style="text-align:right;">-${this.formatNumber(transaction.discount)}</td></tr>` : ""}
-                ${(transaction.ppn || 0) > 0 ? `<tr><td>PPN 11%</td><td style="text-align:right;">${this.formatNumber(transaction.ppn)}</td></tr>` : ""}
-                ${(transaction.shippingCost || 0) > 0 ? `<tr><td>Ongkos Kirim</td><td style="text-align:right;">${this.formatNumber(transaction.shippingCost)}</td></tr>` : ""}
-                ${(transaction.dp || 0) > 0 ? `<tr><td>Uang Muka (DP)</td><td style="text-align:right;">-${this.formatNumber(transaction.dp)}</td></tr>` : ""}
-                <tr style="border-top: 1px solid black; font-weight:bold;"><td>Total Tagihan</td><td style="text-align:right;">${this.formatNumber(transaction.grandTotal || 0)}</td></tr>
+    if (template === "kwitansi") {
+        metaContent = `<div class="kwitansi-box">
+            <table class="meta-table" style="width: 100%; table-layout: fixed;">
+                <tr><td style="width: 40mm; font-weight: bold;">Sudah terima dari</td><td style="width: calc(100% - 40mm);">: ${this.sanitizeInput(partyName)}</td></tr>
+                <tr><td style="font-weight: bold;">Uang Sejumlah</td><td>: <b>${this.formatCurrency(transaction.grandTotal || 0)}</b></td></tr>
+                <tr><td style="font-weight: bold; vertical-align: top;">Terbilang</td><td style="vertical-align: top;" class="terbilang">: ${this.terbilang(grandTotalInteger)} rupiah</td></tr>
+                <tr><td style="font-weight: bold; vertical-align: top;">Untuk Pembayaran</td><td style="vertical-align: top;">: Pelunasan ${transaction.ppn ? 'Invoice' : 'Faktur'} No. ${transaction.id || "N/A"}</td></tr>
+                ${transaction.metodePembayaran ? `<tr><td style="font-weight: bold;">Metode Pembayaran</td><td>: ${this.sanitizeInput(transaction.metodePembayaran)}</td></tr>` : ""}
             </table>
-            <div style="margin-top: 10px; font-style:italic; text-transform: capitalize;">Terbilang: ${this.terbilang(grandTotalInteger)} rupiah</div>` : "";
+        </div>`;
+    }
 
-            const signatures = template === "surat_jalan" ? `<div class="print-signatures">
-                <div><p>Pengirim,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-            </div>` :
-            template === "kwitansi" ? `<div class="print-signatures" style="justify-content:flex-end;">
-                <div><p>Bandung, ${this.formatDate(new Date())}</p><p>Penerima,</p><div class="signature-space"></div><p>(${this.sanitizeInput(config.namaPerusahaan)})</p></div>
-            </div>` :
-            `<div class="print-signatures">
-                <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(20)})</p></div>
-                <div><p>Hormat Kami,</p><div class="signature-space"></div><p>(${this.sanitizeInput(config.namaPerusahaan)})</p></div>
-            </div>`;
+    // Batasi jumlah item maksimal untuk muat dalam satu halaman
+    const maxItems = 20;
+    const limitedItems = (transaction.items || []).slice(0, maxItems);
 
-            return `<div class="page printable-content">
-                <div class="print-header">
-                    <div class="company-info">
-                        <h3>${this.sanitizeInput(config.namaPerusahaan)}</h3>
-                        <p>${this.sanitizeInput(config.tagline)}</p>
-                        <p>${this.sanitizeInput(config.alamatPerusahaan)}</p>
-                        <p>${this.sanitizeInput(config.kontak)}</p>
-                    </div>
-                    <img src="${config.logoUrl || 'https://via.placeholder.com/150x50.png?text=Logo'}" class="logo" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50.png?text=Logo';">
-                </div>
-                <div class="print-section ${template === 'kwitansi' ? 'kwitansi' : ''}">
-                    <h4>${title}</h4>
-                    ${metaContent}
-                    ${itemsContent}
-                    ${summaryContent}
-                    ${transaction.notes ? `<div style="border-top: 1px solid #ccc; margin-top: 5mm; padding-top: 5mm;"><p><b>Keterangan:</b> ${this.sanitizeInput(transaction.notes)}</p></div>` : ""}
-                </div>
-                <div class="print-footer">
-                    ${isTransaction && template !== 'surat_jalan' ? `<p style="font-size:8pt; text-align:center;">Pembayaran mohon di transfer ke rekening ${this.sanitizeInput(config.rekening)}</p>` : ""}
-                    ${signatures}
-                </div>
-            </div>`;
-        }
+    const itemsContent = template !== "kwitansi" ? `<table class="items-table">
+        <thead>
+            <tr>
+                <th style="width:5%;">No</th>
+                <th style="width:${template === 'surat_jalan' ? '70%' : '35%'};">Nama Barang</th>
+                <th style="width:10%; text-align:right;">Qty</th>
+                <th style="width:10%; text-align:center;">Satuan</th>
+                ${template !== "surat_jalan" && isTransaction ? `
+                    <th style="width:15%; text-align:right;">Harga Satuan</th>
+                    <th style="width:20%; text-align:right;">Jumlah</th>
+                ` : ""}
+            </tr>
+        </thead>
+        <tbody>
+            ${limitedItems.map((item, i) => `<tr>
+                <td style="text-align:center;">${i + 1}</td>
+                <td>${this.sanitizeInput(item.name)} ${item.code ? `<small>(${this.sanitizeInput(item.code)})</small>` : ""}</td>
+                <td style="text-align:right;">${this.formatNumber(item.qty)}</td>
+                <td style="text-align:center;">${this.sanitizeInput(item.unit || "-")}</td>
+                ${template !== "surat_jalan" && isTransaction ? `
+                    <td style="text-align:right;">${this.formatNumber(item.price || 0)}</td>
+                    <td style="text-align:right;">${this.formatNumber(item.total || 0)}</td>
+                ` : ""}
+            </tr>`).join("")}
+        </tbody>
+    </table>` : "";
+
+    const summaryContent = isTransaction && template !== "surat_jalan" && template !== "kwitansi" ? `<table class="summary-table">
+        <tr><td>Subtotal</td><td style="text-align:right;">${this.formatNumber(transaction.subtotal || 0)}</td></tr>
+        ${(transaction.discount || 0) > 0 ? `<tr><td>Diskon</td><td style="text-align:right;">-${this.formatNumber(transaction.discount)}</td></tr>` : ""}
+        ${(transaction.ppn || 0) > 0 ? `<tr><td>PPN 11%</td><td style="text-align:right;">${this.formatNumber(transaction.ppn)}</td></tr>` : ""}
+        ${(transaction.shippingCost || 0) > 0 ? `<tr><td>Ongkos Kirim</td><td style="text-align:right;">${this.formatNumber(transaction.shippingCost)}</td></tr>` : ""}
+        ${(transaction.dp || 0) > 0 ? `<tr><td>Uang Muka (DP)</td><td style="text-align:right;">-${this.formatNumber(transaction.dp)}</td></tr>` : ""}
+        <tr style="border-top: 1px solid black; font-weight:bold;"><td>Total Tagihan</td><td style="text-align:right;">${this.formatNumber(transaction.grandTotal || 0)}</td></tr>
+    </table>
+    <div style="margin-top: 5px; font-style:italic; text-transform: capitalize;">Terbilang: ${this.terbilang(grandTotalInteger)} rupiah</div>` : "";
+
+    const signatures = template === "surat_jalan" ? `<div class="print-signatures">
+        <div><p>Pengirim,</p><div class="signature-space"></div><p>(${"_".repeat(15)})</p></div>
+        <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(15)})</p></div>
+    </div>` :
+    `<div class="print-signatures">
+        <div><p>Penerima,</p><div class="signature-space"></div><p>(${"_".repeat(15)})</p></div>
+        <div><p>Hormat Kami,</p><div class="signature-space"></div><p>(${this.sanitizeInput(config.namaPerusahaan)})</p></div>
+    </div>`;
+
+    const rekening = (transaction.ppn && transaction.ppn > 0) 
+        ? "2803024545 a.n PT. SUMBER GANDA MEKAR" 
+        : "2801011286 a.n Maman Suherman";
+
+    const pageContent = `<div class="page printable-content">
+        <style>
+            .page { width: 210mm; min-height: 297mm; max-height: 297mm; margin: 0 auto; padding: 5mm; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.2; page-break-inside: avoid; }
+            @media print { .page { page-break-after: always; } }
+            .print-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5mm; }
+            .company-info p { margin: 0; font-size: 8pt; }
+            .logo { max-width: 40mm; max-height: 15mm; }
+            .meta-tables { display: flex; justify-content: space-between; margin-bottom: 5mm; }
+            .meta-table { width: 48%; border-collapse: collapse; }
+            .meta-table td { padding: 1mm; word-wrap: break-word; max-width: 90mm; font-size: 8pt; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; table-layout: fixed; }
+            .items-table th, .items-table td { border: 1px solid black; padding: 1mm; word-wrap: break-word; font-size: 8pt; }
+            .items-table td:nth-child(2) { max-width: 90mm; overflow: hidden; text-overflow: ellipsis; }
+            .summary-table { width: 50%; margin-left: auto; border-collapse: collapse; margin-bottom: 5mm; }
+            .summary-table td { padding: 1mm; font-size: 8pt; }
+            .print-section { margin-bottom: 5mm; }
+            .rekening-info { font-size: 7pt; text-align: center; margin: 3mm 0; }
+            .print-footer { margin-top: 5mm; }
+            .print-signatures { display: flex; justify-content: space-between; margin-top: 5mm; }
+            .signature-space { height: 15mm; }
+            .kwitansi-box { margin-bottom: 5mm; }
+            .terbilang { word-wrap: break-word; max-width: 90mm; font-size: 8pt; }
+            [style*="keterangan"] { word-wrap: break-word; max-width: 190mm; font-size: 8pt; }
+        </style>
+        <div class="print-header">
+            <div class="company-info">
+                <h3 style="font-size: 12pt; margin: 0;">${this.sanitizeInput(config.namaPerusahaan)}</h3>
+                <p>${this.sanitizeInput(config.tagline)}</p>
+                <p>${this.sanitizeInput(config.alamatPerusahaan)}</p>
+                <p>${this.sanitizeInput(config.kontak)}</p>
+            </div>
+            <img src="${config.logoUrl || 'https://via.placeholder.com/120x40.png?text=Logo'}" class="logo" alt="Logo" onerror="this.src='https://via.placeholder.com/120x40.png?text=Logo';">
+        </div>
+        <div class="print-section ${template === 'kwitansi' ? 'kwitansi' : ''}">
+            <h4 style="font-size: 11pt; margin-bottom: 3mm;">${title}</h4>
+            ${metaContent}
+            ${itemsContent}
+            ${summaryContent}
+            ${transaction.notes ? `<div style="border-top: 1px solid #ccc; margin-top: 3mm; padding-top: 3mm;"><p><b>Keterangan:</b> ${this.sanitizeInput(transaction.notes)}</p></div>` : ""}
+        </div>
+        ${isTransaction && template !== 'surat_jalan' ? `<div class="rekening-info">Pembayaran mohon di transfer ke rekening ${this.sanitizeInput(rekening)}</div>` : ""}
+        <div class="print-footer">
+            ${signatures}
+        </div>
+    </div>`;
+
+    const copyPageContent = `<div class="page printable-content">
+        <style>
+            .page { width: 210mm; min-height: 297mm; max-height: 297mm; margin: 0 auto; padding: 5mm; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.2; page-break-inside: avoid; page-break-before: always; }
+            @media print { .page { page-break-after: always; } }
+            .print-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5mm; }
+            .company-info p { margin: 0; font-size: 8pt; }
+            .logo { max-width: 40mm; max-height: 15mm; }
+            .meta-tables { display: flex; justify-content: space-between; margin-bottom: 5mm; }
+            .meta-table { width: 48%; border-collapse: collapse; }
+            .meta-table td { padding: 1mm; word-wrap: break-word; max-width: 90mm; font-size: 8pt; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; table-layout: fixed; }
+            .items-table th, .items-table td { border: 1px solid black; padding: 1mm; word-wrap: break-word; font-size: 8pt; }
+            .items-table td:nth-child(2) { max-width: 90mm; overflow: hidden; text-overflow: ellipsis; }
+            .summary-table { width: 50%; margin-left: auto; border-collapse: collapse; margin-bottom: 5mm; }
+            .summary-table td { padding: 1mm; font-size: 8pt; }
+            .print-section { margin-bottom: 5mm; }
+            .rekening-info { font-size: 7pt; text-align: center; margin: 3mm 0; }
+            .print-footer { margin-top: 5mm; }
+            .print-signatures { display: flex; justify-content: space-between; margin-top: 5mm; }
+            .signature-space { height: 15mm; }
+            .kwitansi-box { margin-bottom: 5mm; }
+            .terbilang { word-wrap: break-word; max-width: 90mm; font-size: 8pt; }
+            [style*="keterangan"] { word-wrap: break-word; max-width: 190mm; font-size: 8pt; }
+        </style>
+        <h4 style="text-align: center; font-size: 11pt; margin-bottom: 3mm;">COPY</h4>
+        <div class="print-header">
+            <div class="company-info">
+                <h3 style="font-size: 12pt; margin: 0;">${this.sanitizeInput(config.namaPerusahaan)}</h3>
+                <p>${this.sanitizeInput(config.tagline)}</p>
+                <p>${this.sanitizeInput(config.alamatPerusahaan)}</p>
+                <p>${this.sanitizeInput(config.kontak)}</p>
+            </div>
+            <img src="${config.logoUrl || 'https://via.placeholder.com/120x40.png?text=Logo'}" class="logo" alt="Logo" onerror="this.src='https://via.placeholder.com/120x40.png?text=Logo';">
+        </div>
+        <div class="print-section ${template === 'kwitansi' ? 'kwitansi' : ''}">
+            <h4 style="font-size: 11pt; margin-bottom: 3mm;">${title}</h4>
+            ${metaContent}
+            ${itemsContent}
+            ${summaryContent}
+            ${transaction.notes ? `<div style="border-top: 1px solid #ccc; margin-top: 3mm; padding-top: 3mm;"><p><b>Keterangan:</b> ${this.sanitizeInput(transaction.notes)}</p></div>` : ""}
+        </div>
+        ${isTransaction && template !== 'surat_jalan' ? `<div class="rekening-info">Pembayaran mohon di transfer ke rekening ${this.sanitizeInput(rekening)}</div>` : ""}
+        <div class="print-footer">
+            ${signatures}
+        </div>
+    </div>`;
+
+    return `${pageContent}${copyPageContent}`;
+}
         
         async renderDashboard() {
             console.log('Invoices data:', this.data.invoices); // Debugging
